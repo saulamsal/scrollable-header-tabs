@@ -1,8 +1,15 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Dimensions, Animated, PanResponder, Text, FlatList, Platform, StatusBar } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+    StyleSheet,
+    View,
+    Text,
+    Dimensions,
+    Animated,
+    PanResponder,
+    Platform,
+    StatusBar,
+} from 'react-native';
 import { TabView, TabBar } from 'react-native-tab-view';
-import styles from './styles';
-import Header from './Header';
 
 const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
@@ -13,7 +20,7 @@ const SafeStatusBar = Platform.select({
     android: StatusBar.currentHeight,
 });
 
-const TabViewComponent = ({ tabs, headerComponent }) => {
+const TabViewComponent = ({ tabs, HeaderComponent }) => {
     const [tabIndex, setIndex] = useState(0);
     const [routes] = useState(tabs.map(tab => ({ key: tab.name, title: tab.label })));
     const scrollY = useRef(new Animated.Value(0)).current;
@@ -60,22 +67,6 @@ const TabViewComponent = ({ tabs, headerComponent }) => {
             onShouldBlockNativeResponder: () => true,
             onPanResponderGrant: (evt, gestureState) => {
                 headerScrollStart.current = scrollY._value;
-            },
-        })
-    ).current;
-
-    const listPanResponder = useRef(
-        PanResponder.create({
-            onStartShouldSetPanResponderCapture: () => false,
-            onMoveShouldSetPanResponderCapture: () => false,
-            onStartShouldSetPanResponder: () => false,
-            onMoveShouldSetPanResponder: () => {
-                headerScrollY.stopAnimation();
-                return false;
-            },
-            onShouldBlockNativeResponder: () => true,
-            onPanResponderGrant: () => {
-                headerScrollY.stopAnimation();
             },
         })
     ).current;
@@ -150,6 +141,23 @@ const TabViewComponent = ({ tabs, headerComponent }) => {
         syncScrollOffset();
     };
 
+    const renderHeader = () => {
+        const y = scrollY.interpolate({
+            inputRange: [0, HeaderHeight],
+            outputRange: [0, -HeaderHeight],
+            extrapolate: 'clamp',
+        });
+        return (
+            <Animated.View
+                {...headerPanResponder.panHandlers}
+                style={[styles.header, { transform: [{ translateY: y }] }]}>
+                <View style={{ height: HeaderHeight, justifyContent: 'center', alignItems: 'center' }}>
+                    {HeaderComponent ? <HeaderComponent /> : <Text style={{ fontSize: 24 }}>Header</Text>}
+                </View>
+            </Animated.View>
+        );
+    };
+
     const renderScene = ({ route }) => {
         const tab = tabs.find(t => t.name === route.key);
         return (
@@ -163,6 +171,7 @@ const TabViewComponent = ({ tabs, headerComponent }) => {
                         { useNativeDriver: true }
                     )
                 }
+                {...headerPanResponder.panHandlers}
             >
                 {tab.component}
             </Animated.ScrollView>
@@ -222,14 +231,35 @@ const TabViewComponent = ({ tabs, headerComponent }) => {
     return (
         <View style={styles.container}>
             {renderTabView()}
-            <Header
-                scrollY={scrollY}
-                headerPanResponder={headerPanResponder}
-                HeaderHeight={HeaderHeight}
-                headerComponent={headerComponent}
-            />
+            {renderHeader()}
         </View>
     );
 };
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    header: {
+        height: HeaderHeight,
+        width: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'absolute',
+        backgroundColor: '#FFF',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1,
+    },
+    label: { fontSize: 16, color: 'black' },
+    tab: {
+        elevation: 0,
+        shadowOpacity: 0,
+        backgroundColor: 'peachpuff',
+        height: TabBarHeight,
+    },
+    indicator: { backgroundColor: 'black' },
+});
 
 export default TabViewComponent;

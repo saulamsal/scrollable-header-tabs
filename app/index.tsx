@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Button } from 'react-native';
 import TabViewComponent from './components/TabViewComponent';
 import { FlashList } from '@shopify/flash-list';
 
@@ -32,20 +32,33 @@ const FollowingComponent = () => {
 };
 
 
-const SomeHeaderComponent = () => (
-    <View>
-        <Text>Custom Header</Text>
-    </View>
-);
 
-const App = () => (
-    <TabViewComponent
-        tabs={[
-            { name: 'Posts', label: 'Posts', component: <PostComponent /> },
-            { name: 'Following', label: 'Following', component: <FollowingComponent /> },
-        ]}
-        headerComponent={SomeHeaderComponent}
-    />
-);
+const App = () => {
+    const [tabs, setTabs] = useState([
+        { name: 'Posts', label: 'Posts', component: <PostComponent /> },
+        { name: 'Following', label: 'Following', component: <FollowingComponent /> },
+        
+    ]);
+
+
+
+    const SomeHeaderComponent = () => (
+        <View>
+            <Button title="Add tab"
+            onPress={() => {
+                setTabs([...tabs, { name: 'New Tab', label: 'New Tab', component: <PostComponent /> }])
+            }}
+            ></Button>
+        </View>
+    );
+
+
+    return (
+        <TabViewComponent
+            tabs={tabs}
+            HeaderComponent={SomeHeaderComponent}
+        />
+    )
+};
 
 export default App;
