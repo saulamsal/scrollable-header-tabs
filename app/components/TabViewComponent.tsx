@@ -1,10 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, View, Dimensions, Animated, PanResponder, Text, FlatList,
-    Platform, StatusBar
- } from 'react-native';
+import { View, Dimensions, Animated, PanResponder, Text, FlatList, Platform, StatusBar } from 'react-native';
 import { TabView, TabBar } from 'react-native-tab-view';
+import styles from './styles';
 import Header from './Header';
-
 
 const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
@@ -14,18 +12,10 @@ const SafeStatusBar = Platform.select({
     ios: 44,
     android: StatusBar.currentHeight,
 });
-const tab1ItemSize = (windowWidth - 30) / 2;
-const tab2ItemSize = (windowWidth - 40) / 3;
 
-const TabViewComponent = () => {
+const TabViewComponent = ({ tabs, headerComponent }) => {
     const [tabIndex, setIndex] = useState(0);
-    const [routes] = useState([
-        { key: 'tab1', title: 'Tab1' },
-        { key: 'tab2', title: 'Tab2' },
-    ]);
-    const [canScroll, setCanScroll] = useState(true);
-    const [tab1Data] = useState(Array(40).fill(0));
-    const [tab2Data] = useState(Array(30).fill(0));
+    const [routes] = useState(tabs.map(tab => ({ key: tab.name, title: tab.label })));
     const scrollY = useRef(new Animated.Value(0)).current;
     const headerScrollY = useRef(new Animated.Value(0)).current;
     const listRefArr = useRef([]);
@@ -160,103 +150,30 @@ const TabViewComponent = () => {
         syncScrollOffset();
     };
 
-    const renderTab1Item = ({ item, index }) => (
-        <View
-            style={{
-                borderRadius: 16,
-                marginLeft: index % 2 === 0 ? 0 : 10,
-                width: tab1ItemSize,
-                height: tab1ItemSize,
-                backgroundColor: '#aaa',
-                justifyContent: 'center',
-                alignItems: 'center',
-            }}>
-            <Text>{index}</Text>
-        </View>
-    );
-
-    const renderTab2Item = ({ item, index }) => (
-        <View
-            style={{
-                marginLeft: index % 3 === 0 ? 0 : 10,
-                borderRadius: 16,
-                width: tab2ItemSize,
-                height: tab2ItemSize,
-                backgroundColor: '#aaa',
-                justifyContent: 'center',
-                alignItems: 'center',
-            }}>
-            <Text>{index}</Text>
-        </View>
-    );
+    const renderScene = ({ route }) => {
+        const tab = tabs.find(t => t.name === route.key);
+        return (
+            <Animated.ScrollView
+                contentContainerStyle={{ paddingTop: HeaderHeight + TabBarHeight }}
+                showsVerticalScrollIndicator={false}
+                scrollEventThrottle={16}
+                onScroll={
+                    Animated.event(
+                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                        { useNativeDriver: true }
+                    )
+                }
+            >
+                {tab.component}
+            </Animated.ScrollView>
+        );
+    };
 
     const renderLabel = ({ route, focused }) => (
         <Text style={[styles.label, { opacity: focused ? 1 : 0.5 }]}>
             {route.title}
         </Text>
     );
-
-    const renderScene = ({ route }) => {
-        const focused = route.key === routes[tabIndex].key;
-        let numCols;
-        let data;
-        let renderItem;
-        switch (route.key) {
-            case 'tab1':
-                numCols = 2;
-                data = tab1Data;
-                renderItem = renderTab1Item;
-                break;
-            case 'tab2':
-                numCols = 3;
-                data = tab2Data;
-                renderItem = renderTab2Item;
-                break;
-            default:
-                return null;
-        }
-        return (
-            <Animated.FlatList
-                {...listPanResponder.panHandlers}
-                numColumns={numCols}
-                ref={(ref) => {
-                    if (ref) {
-                        const found = listRefArr.current.find((e) => e.key === route.key);
-                        if (!found) {
-                            listRefArr.current.push({
-                                key: route.key,
-                                value: ref,
-                            });
-                        }
-                    }
-                }}
-                scrollEventThrottle={16}
-                onScroll={
-                    focused
-                        ? Animated.event(
-                            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                            { useNativeDriver: true }
-                        )
-                        : null
-                }
-                onMomentumScrollBegin={onMomentumScrollBegin}
-                onScrollEndDrag={onScrollEndDrag}
-                onMomentumScrollEnd={onMomentumScrollEnd}
-                ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-                ListHeaderComponent={() => <View style={{ height: 10 }} />}
-                contentContainerStyle={{
-                    paddingTop: HeaderHeight + TabBarHeight,
-                    paddingHorizontal: 10,
-                    minHeight: windowHeight - SafeStatusBar + HeaderHeight,
-                }}
-                showsHorizontalScrollIndicator={false}
-                data={data}
-                renderItem={renderItem}
-                showsVerticalScrollIndicator={false}
-                keyExtractor={(item, index) => index.toString()}
-            />
-        );
-    };
 
     const renderTabBar = (props) => {
         const y = scrollY.interpolate({
@@ -281,6 +198,7 @@ const TabViewComponent = () => {
                     style={styles.tab}
                     renderLabel={renderLabel}
                     indicatorStyle={styles.indicator}
+                    scrollEnabled
                 />
             </Animated.View>
         );
@@ -288,8 +206,8 @@ const TabViewComponent = () => {
 
     const renderTabView = () => (
         <TabView
-            onSwipeStart={() => setCanScroll(false)}
-            onSwipeEnd={() => setCanScroll(true)}
+            onSwipeStart={() => { }}
+            onSwipeEnd={() => { }}
             onIndexChange={(id) => {
                 _tabIndex.current = id;
                 setIndex(id);
@@ -304,16 +222,14 @@ const TabViewComponent = () => {
     return (
         <View style={styles.container}>
             {renderTabView()}
-            <Header scrollY={scrollY} headerPanResponder={headerPanResponder} HeaderHeight={HeaderHeight} />
+            <Header
+                scrollY={scrollY}
+                headerPanResponder={headerPanResponder}
+                HeaderHeight={HeaderHeight}
+                headerComponent={headerComponent}
+            />
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    container: { flex: 1 },
-    label: { fontSize: 16, color: '#222' },
-    tab: { elevation: 0, shadowOpacity: 0, backgroundColor: '#FFCC80', height: TabBarHeight },
-    indicator: { backgroundColor: '#222' },
-});
 
 export default TabViewComponent;

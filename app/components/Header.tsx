@@ -1,35 +1,31 @@
 import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Alert, Animated } from 'react-native';
+import { View, Text, Animated } from 'react-native';
 
-const Header = ({ scrollY, headerPanResponder, HeaderHeight }) => {
-    const y = scrollY.interpolate({
+const Header = ({ scrollY, headerPanResponder, HeaderHeight, headerComponent: HeaderComponent }) => {
+    const headerTranslate = scrollY.interpolate({
         inputRange: [0, HeaderHeight],
         outputRange: [0, -HeaderHeight],
         extrapolate: 'clamp',
     });
+
     return (
         <Animated.View
             {...headerPanResponder.panHandlers}
-            style={[styles.header, {height: HeaderHeight, transform: [{ translateY: y }] }]}>
-            <TouchableOpacity
-                style={{ flex: 1, justifyContent: 'center' }}
-                activeOpacity={1}
-                onPress={() => Alert.alert('header Clicked!')}>
-                <Text>Scrollable Header</Text>
-            </TouchableOpacity>
+            style={{
+                height: HeaderHeight,
+                transform: [{ translateY: headerTranslate }],
+                backgroundColor: '#FFF',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                zIndex: 1,
+            }}>
+            <View style={{ height: HeaderHeight, justifyContent: 'center', alignItems: 'center' }}>
+                {HeaderComponent ? <HeaderComponent /> : <Text style={{ fontSize: 24 }}>Header</Text>}
+            </View>
         </Animated.View>
     );
 };
-
-const styles = StyleSheet.create({
-    header: {
-     
-        width: '100%',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'absolute',
-        backgroundColor: '#40FFC4',
-    },
-});
 
 export default Header;
