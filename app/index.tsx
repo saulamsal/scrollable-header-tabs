@@ -86,7 +86,17 @@ const App = () => {
         <TabViewComponent
             tabs={tabs}
             HeaderComponent={SomeHeaderComponent}
-            headerHeightOnScroll={100}
+            // headerHeightOnScroll={200}
+            materialTopTabProps={{
+                lazy: true,
+                lazyPreloadDistance: 2,
+                tabBarScrollEnabled: true,
+                // Any other props accepted by react-native-tab-view can be added here
+                tabStyle: { width: 'auto' },
+                // indicatorStyle: { backgroundColor: 'blue' },
+                labelStyle: { fontSize: 14, color: 'black' },
+                // You can even provide a custom renderTabBar function if needed
+            }}
         />
     );
 };
