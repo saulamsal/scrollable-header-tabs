@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import TabViewComponent from './components/TabViewComponent';
 import { FlashList } from '@shopify/flash-list';
 
@@ -86,7 +86,7 @@ const App = () => {
         <TabViewComponent
             tabs={tabs}
             HeaderComponent={SomeHeaderComponent}
-            // headerHeightOnScroll={200}
+            headerHeightOnScroll={80}
             materialTopTabProps={{
                 lazy: true,
                 lazyPreloadDistance: 2,
