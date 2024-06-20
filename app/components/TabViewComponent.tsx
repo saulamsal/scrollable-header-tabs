@@ -8,7 +8,7 @@ import {
     Text,
     PanResponder,
 } from 'react-native';
-import { TabView, TabBar } from 'react-native-tab-view';
+import { TabView } from 'react-native-tab-view';
 
 const windowWidth = Dimensions.get('window').width;
 const TabBarHeight = 48;
@@ -23,7 +23,7 @@ const TabViewComponent = React.memo(({
     materialTopTabProps = {},
 }) => {
     const [index, setIndex] = useState(0);
-    const [routes, setRoutes] = useState(tabs.map(tab => ({ key: tab.name, title: tab.label })));
+    const [routes] = useState(tabs.map(tab => ({ key: tab.name, title: tab.label })));
     const scrollY = useRef(new Animated.Value(0)).current;
     const [headerHeight, setHeaderHeight] = useState(0);
     const [effectiveHeaderHeightOnScroll, setEffectiveHeaderHeightOnScroll] = useState(0);
@@ -31,17 +31,6 @@ const TabViewComponent = React.memo(({
     const scrollViewRefs = useRef({});
 
     const hasHeader = !!HeaderComponent || headerHeightOnScroll > 0;
-
-    useEffect(() => {
-        const newRoutes = tabs.map(tab => ({ key: tab.name, title: tab.label }));
-        setRoutes(newRoutes);
-
-        if (index >= tabs.length) {
-            const newIndex = Math.max(0, tabs.length - 1);
-            setIndex(newIndex);
-            onTabChange?.(newIndex);
-        }
-    }, [tabs, index, onTabChange]);
 
     useEffect(() => {
         setEffectiveHeaderHeightOnScroll(Math.min(headerHeight, headerHeightOnScroll || 0));
@@ -101,12 +90,7 @@ const TabViewComponent = React.memo(({
         );
     }, [headerPanResponder, headerTranslateY, HeaderComponent, headerHeightOnScroll, hasHeader]);
 
-    const renderTabBar = useCallback((props) => {
-        const { renderTabBar } = materialTopTabProps;
-        if (renderTabBar) {
-            return renderTabBar(props);
-        }
-
+    const renderTabBar = useCallback(() => {
         return (
             <Animated.View
                 style={[
@@ -116,23 +100,34 @@ const TabViewComponent = React.memo(({
                     !hasHeader ? { top: 0 } : null
                 ]}
             >
-                <TabBar
-                    {...props}
-                    scrollEnabled={materialTopTabProps.tabBarScrollEnabled}
-                    style={[styles.tabBar, tabBarStyle]}
-                    tabStyle={materialTopTabProps.tabStyle}
-                    indicatorStyle={materialTopTabProps.indicatorStyle}
-                    labelStyle={materialTopTabProps.labelStyle}
-                    renderLabel={renderTabLabel || materialTopTabProps.renderLabel}
-                    onTabPress={({ route, preventDefault }) => {
-                        if (props.navigationState.index !== props.navigationState.routes.findIndex(r => r.key === route.key)) {
-                            props.jumpTo(route.key);
-                        }
-                    }}
-                />
+                <Animated.ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.tabScroll}
+                    contentContainerStyle={styles.tabScrollContent}
+                >
+                    {routes.map((route, i) => (
+                        <TouchableOpacity
+                            key={route.key}
+                            style={[styles.tabItem, i === index && styles.tabItemActive]}
+                            onPress={() => {
+                                setIndex(i);
+                                onTabChange?.(i);
+                            }}
+                        >
+                            {renderTabLabel ? (
+                                renderTabLabel({ route, focused: i === index })
+                            ) : (
+                                <Text style={[styles.tabText, i === index && styles.tabTextActive]}>
+                                    {route.title}
+                                </Text>
+                            )}
+                        </TouchableOpacity>
+                    ))}
+                </Animated.ScrollView>
             </Animated.View>
         );
-    }, [materialTopTabProps, tabBarStyle, tabBarTranslateY, hasHeader, renderTabLabel]);
+    }, [routes, index, tabBarStyle, tabBarTranslateY, hasHeader, renderTabLabel, onTabChange]);
 
     const renderScene = useCallback(({ route }) => {
         const tab = tabs.find(t => t.name === route.key);
@@ -163,16 +158,17 @@ const TabViewComponent = React.memo(({
     return (
         <View style={styles.container}>
             {renderHeader()}
+            {renderTabBar()}
             <TabView
                 {...materialTopTabProps}
                 navigationState={{ index, routes }}
                 renderScene={renderScene}
-                renderTabBar={renderTabBar}
                 onIndexChange={(i) => {
                     setIndex(i);
                     onTabChange?.(i);
                     materialTopTabProps.onIndexChange?.(i);
                 }}
+                renderTabBar={() => null}
                 initialLayout={{ width: windowWidth }}
             />
         </View>
@@ -199,6 +195,31 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
         shadowRadius: 2,
+        zIndex: 1,
+    },
+    tabScroll: {
+        height: TabBarHeight,
+    },
+    tabScrollContent: {
+        flexDirection: 'row',
+    },
+    tabItem: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 15,
+        height: TabBarHeight,
+    },
+    tabItemActive: {
+        borderBottomWidth: 2,
+        borderBottomColor: 'black',
+    },
+    tabText: {
+        fontSize: 16,
+        color: 'gray',
+    },
+    tabTextActive: {
+        color: 'black',
     },
 });
 
