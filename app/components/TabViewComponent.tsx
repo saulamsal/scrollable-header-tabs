@@ -110,7 +110,7 @@ const TabViewComponent = React.memo(({
         return (
             <Animated.View
                 style={[
-                    { height: TabBarHeight },
+                    styles.tabBar,
                     tabBarStyle,
                     hasHeader ? { transform: [{ translateY: tabBarTranslateY }] } : null,
                     !hasHeader ? { top: 0 } : null
@@ -124,6 +124,11 @@ const TabViewComponent = React.memo(({
                     indicatorStyle={materialTopTabProps.indicatorStyle}
                     labelStyle={materialTopTabProps.labelStyle}
                     renderLabel={renderTabLabel || materialTopTabProps.renderLabel}
+                    onTabPress={({ route, preventDefault }) => {
+                        if (props.navigationState.index !== props.navigationState.routes.findIndex(r => r.key === route.key)) {
+                            props.jumpTo(route.key);
+                        }
+                    }}
                 />
             </Animated.View>
         );
@@ -186,7 +191,15 @@ const styles = StyleSheet.create({
         zIndex: 1,
         backgroundColor: 'transparent',
     },
-  
+    tabBar: {
+        backgroundColor: 'white',
+        height: TabBarHeight,
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 2,
+    },
 });
 
 export default TabViewComponent;
