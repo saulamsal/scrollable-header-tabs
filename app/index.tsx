@@ -66,7 +66,7 @@ const App = () => {
     };
 
     const SomeHeaderComponent = () => (
-        <View style={{ backgroundColor: 'red', padding: 20, width: '100%' }}>
+        <View style={{ backgroundColor: 'red', padding: 40, width: '100%' }}>
             <TouchableOpacity
                 onPress={addRandomTab}
                 style={{ backgroundColor: 'white', padding: 10, marginBottom: 10 }}
@@ -86,7 +86,7 @@ const App = () => {
         <TabViewComponent
             tabs={tabs}
             HeaderComponent={SomeHeaderComponent}
-            headerHeightOnScroll={50}
+            headerHeightOnScroll={100}
         />
     );
 };
