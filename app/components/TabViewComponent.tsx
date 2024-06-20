@@ -68,6 +68,12 @@ const TabViewComponent = React.memo(({
         });
     }, [headerHeight, effectiveHeaderHeightOnScroll, hasHeader]);
 
+    const isTabSticky = useMemo(() => scrollY.interpolate({
+        inputRange: [0, headerHeight - effectiveHeaderHeightOnScroll],
+        outputRange: [0, 1],
+        extrapolate: 'clamp',
+    }), [headerHeight, effectiveHeaderHeightOnScroll]);
+
     const renderHeader = useCallback(() => {
         if (!hasHeader) return null;
         return (
@@ -85,10 +91,17 @@ const TabViewComponent = React.memo(({
                     }
                 ]}
             >
-                {HeaderComponent ? <HeaderComponent /> : null}
+                {HeaderComponent && (
+                    <HeaderComponent
+                        scrollY={scrollY}
+                        isTabSticky={isTabSticky}
+                        headerHeight={headerHeight}
+                        effectiveHeaderHeightOnScroll={effectiveHeaderHeightOnScroll}
+                    />
+                )}
             </Animated.View>
         );
-    }, [headerPanResponder, headerTranslateY, HeaderComponent, headerHeightOnScroll, hasHeader]);
+    }, [headerPanResponder, headerTranslateY, HeaderComponent, headerHeightOnScroll, hasHeader, scrollY, isTabSticky, headerHeight, effectiveHeaderHeightOnScroll]);
 
     const renderTabBar = useCallback(() => {
         return (
