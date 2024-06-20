@@ -43,7 +43,6 @@ const App = () => {
     ]);
 
     const addRandomTab = () => {
-        alert('Adding random tab');
         const randomTabs = ['Photos', 'Videos', 'Music', 'Books', 'Games', 'Movies', 'TV Shows', 'Sports'];
         const randomIndex = Math.floor(Math.random() * randomTabs.length);
         const newTabName = randomTabs[randomIndex];
@@ -60,7 +59,6 @@ const App = () => {
 
     const removeLastTab = () => {
         if (tabs.length > 1) {
-            alert('Removing last tab');
             setTabs(prevTabs => prevTabs.slice(0, -1));
         } else {
             alert('Cannot remove the last tab');

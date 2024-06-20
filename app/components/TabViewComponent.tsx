@@ -8,25 +8,35 @@ import {
     Text,
     PanResponder,
 } from 'react-native';
-import { TabView, SceneMap } from 'react-native-tab-view';
+import { TabView } from 'react-native-tab-view';
 
 const windowWidth = Dimensions.get('window').width;
 const TabBarHeight = 48;
 
 const TabViewComponent = ({ tabs, HeaderComponent, headerHeightOnScroll = 200 }) => {
     const [index, setIndex] = useState(0);
-    const [routes] = useState(tabs.map(tab => ({ key: tab.name, title: tab.label })));
+    const [routes, setRoutes] = useState(tabs.map(tab => ({ key: tab.name, title: tab.label })));
     const scrollY = useRef(new Animated.Value(0)).current;
     const [headerHeight, setHeaderHeight] = useState(headerHeightOnScroll);
     const tabViewRef = useRef(null);
     const scrollViewRefs = useRef({});
+
+    useEffect(() => {
+        const newRoutes = tabs.map(tab => ({ key: tab.name, title: tab.label }));
+        setRoutes(newRoutes);
+
+        // Adjust index if the current tab has been removed
+        if (index >= tabs.length) {
+            setIndex(Math.max(0, tabs.length - 1));
+        }
+    }, [tabs]);
 
     const headerPanResponder = PanResponder.create({
         onMoveShouldSetPanResponder: (_, gestureState) => {
             return Math.abs(gestureState.dy) > 5;
         },
         onPanResponderMove: (_, gestureState) => {
-            const activeScrollView = scrollViewRefs.current[routes[index].key];
+            const activeScrollView = scrollViewRefs.current[routes[index]?.key];
             if (activeScrollView) {
                 activeScrollView.scrollTo({
                     y: -gestureState.dy,
@@ -35,7 +45,7 @@ const TabViewComponent = ({ tabs, HeaderComponent, headerHeightOnScroll = 200 })
             }
         },
         onPanResponderRelease: (_, gestureState) => {
-            const activeScrollView = scrollViewRefs.current[routes[index].key];
+            const activeScrollView = scrollViewRefs.current[routes[index]?.key];
             if (activeScrollView) {
                 if (Math.abs(gestureState.vy) > 0.5) {
                     Animated.decay(scrollY, {
@@ -96,31 +106,31 @@ const TabViewComponent = ({ tabs, HeaderComponent, headerHeightOnScroll = 200 })
         </Animated.View>
     );
 
-    const renderScene = SceneMap(
-        tabs.reduce((acc, tab) => {
-            acc[tab.name] = () => (
-                <Animated.ScrollView
-                    ref={(ref) => {
-                        if (ref) {
-                            scrollViewRefs.current[tab.name] = ref;
-                        }
-                    }}
-                    contentContainerStyle={{
-                        paddingTop: headerHeight + TabBarHeight,
-                        minHeight: Dimensions.get('window').height,
-                    }}
-                    scrollEventThrottle={16}
-                    onScroll={Animated.event(
-                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                        { useNativeDriver: true }
-                    )}
-                >
-                    {tab.component}
-                </Animated.ScrollView>
-            );
-            return acc;
-        }, {})
-    );
+    const renderScene = ({ route }) => {
+        const tab = tabs.find(t => t.name === route.key);
+        if (!tab) return null;  // Return null if the tab doesn't exist
+
+        return (
+            <Animated.ScrollView
+                ref={(ref) => {
+                    if (ref) {
+                        scrollViewRefs.current[route.key] = ref;
+                    }
+                }}
+                contentContainerStyle={{
+                    paddingTop: headerHeight + TabBarHeight,
+                    minHeight: Dimensions.get('window').height,
+                }}
+                scrollEventThrottle={16}
+                onScroll={Animated.event(
+                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                    { useNativeDriver: true }
+                )}
+            >
+                {tab.component}
+            </Animated.ScrollView>
+        );
+    };
 
     return (
         <View style={styles.container}>
