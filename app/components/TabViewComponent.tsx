@@ -1,15 +1,15 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo, createContext } from 'react';
 import {
     StyleSheet,
     View,
     Dimensions,
-    Animated,
     TouchableOpacity,
     Text,
     PanResponder,
     FlatList,
     ScrollView,
     RefreshControl,
+    Animated,
 } from 'react-native';
 import { TabView } from 'react-native-tab-view';
 import { FlashList } from '@shopify/flash-list';
@@ -17,10 +17,71 @@ import { FlashList } from '@shopify/flash-list';
 const windowWidth = Dimensions.get('window').width;
 const TabBarHeight = 48;
 
-
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 const AnimatedFlashList = Animated.createAnimatedComponent(FlashList);
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
+
+const MAX_VIEWABLE_ITEMS = 1;
+
+export const ViewabilityItemsContext = createContext([]);
+export const ItemKeyContext = createContext(undefined);
+
+const ViewabilityTracker = React.forwardRef(({ listType, onScroll: parentOnScroll, ...props }, ref) => {
+    const [visibleItems, setVisibleItems] = useState([]);
+    const { renderItem: originalRenderItem, onEndReached } = props;
+    const hasScrolled = useRef(false);
+
+    const renderItem = useCallback((params) => (
+        <ItemKeyContext.Provider value={params.index}>
+            {originalRenderItem(params)}
+        </ItemKeyContext.Provider>
+    ), [originalRenderItem]);
+
+    const onViewableItemsChanged = useCallback(({ viewableItems }) => {
+        setVisibleItems(viewableItems
+            .slice(0, MAX_VIEWABLE_ITEMS)
+            .map((item) => item.index));
+    }, []);
+
+    const handleEndReached = useCallback((info) => {
+        if (hasScrolled.current) {
+            onEndReached?.(info);
+        }
+    }, [onEndReached]);
+
+    const handleScroll = useCallback((event) => {
+        if (!hasScrolled.current) {
+            hasScrolled.current = true;
+        }
+        if (typeof parentOnScroll === 'function') {
+            parentOnScroll(event);
+        } else if (parentOnScroll && typeof parentOnScroll.onScroll === 'function') {
+            parentOnScroll.onScroll(event);
+        }
+    }, [parentOnScroll]);
+
+    const ListComponent = listType === 'FlatList' ? AnimatedFlatList :
+        listType === 'FlashList' ? AnimatedFlashList :
+            AnimatedScrollView;
+
+    return (
+        <ViewabilityItemsContext.Provider value={visibleItems}>
+            <ListComponent
+                {...props}
+                ref={ref}
+                renderItem={renderItem}
+                onViewableItemsChanged={onViewableItemsChanged}
+                viewabilityConfig={{
+                    minimumViewTime: 10,
+                    itemVisiblePercentThreshold: 100,
+                }}
+                onEndReached={handleEndReached}
+                onScroll={handleScroll}
+                scrollEventThrottle={16}
+            />
+        </ViewabilityItemsContext.Provider>
+    );
+});
 
 const TabViewComponent = React.memo(({
                                          tabs,
@@ -156,18 +217,6 @@ const TabViewComponent = React.memo(({
         const tab = tabs.find(t => t.name === route.key);
         if (!tab) return null;
 
-        let ListComponent;
-        switch (tab.listType) {
-            case 'FlatList':
-                ListComponent = AnimatedFlatList;
-                break;
-            case 'FlashList':
-                ListComponent = AnimatedFlashList;
-                break;
-            default:
-                ListComponent = AnimatedScrollView;
-        }
-
         const onScroll = Animated.event(
             [{ nativeEvent: { contentOffset: { y: scrollY } } }],
             { useNativeDriver: true }
@@ -192,33 +241,31 @@ const TabViewComponent = React.memo(({
                 minHeight: Dimensions.get('window').height,
             },
             scrollEventThrottle: 16,
-            onScroll: hasHeader ? onScroll : undefined,
             refreshControl: refreshControl,
+            onScroll: onScroll,  // Pass the Animated.event object directly
         };
 
-        if (ListComponent === AnimatedScrollView) {
+        if (tab.listType === 'ScrollView') {
             return (
-                <ListComponent {...commonProps}>
+                <AnimatedScrollView {...commonProps}>
                     {tab.component}
-                </ListComponent>
+                </AnimatedScrollView>
             );
         }
 
         return (
-            <ListComponent
+            <ViewabilityTracker
                 {...commonProps}
+                listType={tab.listType}
                 data={tab.data}
                 renderItem={tab.renderItem}
                 keyExtractor={tab.keyExtractor}
                 onEndReached={tab.onEndReached}
                 onEndReachedThreshold={0.5}
-                onViewableItemsChanged={tab.onViewableItemsChanged}
-                viewabilityConfig={tab.viewabilityConfig}
                 estimatedItemSize={tab.estimatedItemSize}
             />
         );
     }, [tabs, headerHeight, scrollY, hasHeader]);
-
 
 
 

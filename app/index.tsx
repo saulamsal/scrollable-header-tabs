@@ -1,32 +1,48 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Animated, StyleSheet, Alert } from 'react-native';
-import TabViewComponent from './components/TabViewComponent';
-import { FlashList } from '@shopify/flash-list';
+import React, { useState, useCallback, useEffect, useContext } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Animated } from 'react-native';
+import TabViewComponent, { ViewabilityItemsContext, ItemKeyContext } from './components/TabViewComponent';
 
-const PostItem = ({ item, isCentered }) => (
-    <View style={[styles.postItem, isCentered && styles.centeredItem]}>
-        <Text>Post {item}</Text>
-    </View>
-);
+const PostItem = ({ item }) => {
+    const id = useContext(ItemKeyContext);
+    const visibleItems = useContext(ViewabilityItemsContext);
+    const isCentered = visibleItems.includes(id);
 
-const FollowingItem = ({ item, isCentered }) => (
-    <View style={[styles.followingItem, isCentered && styles.centeredItem]}>
-        <Text>Following Content {item}</Text>
-    </View>
-);
+    return (
+        <View style={[styles.postItem, isCentered && styles.centeredItem]}>
+            <Text>Post {item}</Text>
+        </View>
+    );
+};
 
-const VideoItem = ({ item, isCentered }) => (
-    <View style={[styles.videoItem, isCentered && styles.centeredItem]}>
-        <Text>Video {item}</Text>
-    </View>
-);
+const FollowingItem = ({ item }) => {
+    const id = useContext(ItemKeyContext);
+    const visibleItems = useContext(ViewabilityItemsContext);
+    const isCentered = visibleItems.includes(id);
+
+    return (
+        <View style={[styles.followingItem, isCentered && styles.centeredItem]}>
+            <Text>Following Content {item}</Text>
+        </View>
+    );
+};
+
+const VideoItem = ({ item }) => {
+    const id = useContext(ItemKeyContext);
+    const visibleItems = useContext(ViewabilityItemsContext);
+    const isCentered = visibleItems.includes(id);
+
+    return (
+        <View style={[styles.videoItem, isCentered && styles.centeredItem]}>
+            <Text>Video {item}</Text>
+        </View>
+    );
+};
 
 const App = () => {
     const [postsData, setPostsData] = useState(Array.from({ length: 20 }, (_, i) => i + 1));
     const [followingData, setFollowingData] = useState(Array.from({ length: 20 }, (_, i) => i + 1));
     const [videosData, setVideosData] = useState(Array.from({ length: 20 }, (_, i) => i + 1));
     const [refreshing, setRefreshing] = useState({ posts: false, following: false, videos: false });
-    const [centeredItems, setCenteredItems] = useState({ posts: null, following: null, videos: null });
 
     const onRefresh = useCallback((tabName) => {
         setRefreshing(prev => ({ ...prev, [tabName]: true }));
@@ -41,30 +57,17 @@ const App = () => {
         // Here you would typically load more data
     }, []);
 
-    const onViewableItemsChanged = useCallback((tabName) => ({ viewableItems }) => {
-        if (viewableItems.length > 0) {
-            const centerItem = viewableItems[Math.floor(viewableItems.length / 2)];
-            setCenteredItems(prev => ({ ...prev, [tabName]: centerItem.item }));
-        }
-    }, []);
-
-    const viewabilityConfig = {
-        itemVisiblePercentThreshold: 50
-    };
-
     const [tabs, setTabs] = useState([
         {
-            name: 'Posts',
-            label: 'Posts',
+            name: 'For You',
+            label: 'For You',
             listType: 'FlashList',
             data: postsData,
-            renderItem: ({ item }) => <PostItem item={item} isCentered={centeredItems.posts === item} />,
+            renderItem: ({ item }) => <PostItem item={item} />,
             keyExtractor: (item) => `post-${item}`,
             onRefresh: () => onRefresh('Posts'),
             refreshing: refreshing.posts,
             onEndReached: () => onEndReached('Posts'),
-            onViewableItemsChanged: onViewableItemsChanged('posts'),
-            viewabilityConfig,
             estimatedItemSize: 50,
         },
         {
@@ -72,29 +75,29 @@ const App = () => {
             label: 'Following',
             listType: 'FlatList',
             data: followingData,
-            renderItem: ({ item }) => <FollowingItem item={item} isCentered={centeredItems.following === item} />,
+            renderItem: ({ item }) => <FollowingItem item={item} />,
             keyExtractor: (item) => `following-${item}`,
             onRefresh: () => onRefresh('Following'),
             refreshing: refreshing.following,
             onEndReached: () => onEndReached('Following'),
-            onViewableItemsChanged: onViewableItemsChanged('following'),
-            viewabilityConfig,
         },
         {
-            name: 'Videos',
-            label: 'Videos',
+            name: 'Recap',
+            label: 'Recap',
             listType: 'ScrollView',
             component: (
                 <View>
                     {videosData.map(item => (
-                        <VideoItem key={`video-${item}`} item={item} isCentered={centeredItems.videos === item} />
+                        <VideoItem key={`video-${item}`} item={item} />
                     ))}
                 </View>
             ),
             onRefresh: () => onRefresh('Videos'),
             refreshing: refreshing.videos,
+
         },
     ]);
+
 
     const HeaderComponent = ({ scrollY, headerHeight, effectiveHeaderHeightOnScroll }) => {
         const contentTranslateY = scrollY.interpolate({
