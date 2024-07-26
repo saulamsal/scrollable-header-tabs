@@ -7,28 +7,37 @@ import {
     TouchableOpacity,
     Text,
     PanResponder,
+    FlatList,
+    ScrollView,
+    RefreshControl,
 } from 'react-native';
 import { TabView } from 'react-native-tab-view';
+import { FlashList } from '@shopify/flash-list';
 
 const windowWidth = Dimensions.get('window').width;
 const TabBarHeight = 48;
 
+
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+const AnimatedFlashList = Animated.createAnimatedComponent(FlashList);
+const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
+
 const TabViewComponent = React.memo(({
-    tabs,
-    HeaderComponent,
-    headerHeightOnScroll,
-    tabBarStyle,
-    renderTabLabel,
-    onTabChange,
-    materialTopTabProps = {},
-}) => {
+                                         tabs,
+                                         HeaderComponent,
+                                         headerHeightOnScroll,
+                                         tabBarStyle,
+                                         renderTabLabel,
+                                         onTabChange,
+                                         materialTopTabProps = {},
+                                     }) => {
     const [index, setIndex] = useState(0);
     const [routes] = useState(tabs.map(tab => ({ key: tab.name, title: tab.label })));
     const scrollY = useRef(new Animated.Value(0)).current;
     const [headerHeight, setHeaderHeight] = useState(0);
     const [effectiveHeaderHeightOnScroll, setEffectiveHeaderHeightOnScroll] = useState(0);
     const tabViewRef = useRef(null);
-    const scrollViewRefs = useRef({});
+    const listRefs = useRef({});
 
     const hasHeader = !!HeaderComponent || headerHeightOnScroll > 0;
 
@@ -39,12 +48,12 @@ const TabViewComponent = React.memo(({
     const headerPanResponder = useMemo(() => PanResponder.create({
         onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dy) > 5,
         onPanResponderMove: (_, gestureState) => {
-            const activeScrollView = scrollViewRefs.current[routes[index]?.key];
-            activeScrollView?.scrollTo({ y: -gestureState.dy, animated: false });
+            const activeList = listRefs.current[routes[index]?.key];
+            activeList?.scrollToOffset({ offset: -gestureState.dy, animated: false });
         },
         onPanResponderRelease: (_, gestureState) => {
-            const activeScrollView = scrollViewRefs.current[routes[index]?.key];
-            if (activeScrollView && Math.abs(gestureState.vy) > 0.5) {
+            const activeList = listRefs.current[routes[index]?.key];
+            if (activeList && Math.abs(gestureState.vy) > 0.5) {
                 Animated.decay(scrollY, {
                     velocity: -gestureState.vy,
                     useNativeDriver: true,
@@ -142,31 +151,76 @@ const TabViewComponent = React.memo(({
         );
     }, [routes, index, tabBarStyle, tabBarTranslateY, hasHeader, renderTabLabel, onTabChange]);
 
+
     const renderScene = useCallback(({ route }) => {
         const tab = tabs.find(t => t.name === route.key);
         if (!tab) return null;
 
+        let ListComponent;
+        switch (tab.listType) {
+            case 'FlatList':
+                ListComponent = AnimatedFlatList;
+                break;
+            case 'FlashList':
+                ListComponent = AnimatedFlashList;
+                break;
+            default:
+                ListComponent = AnimatedScrollView;
+        }
+
+        const onScroll = Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: true }
+        );
+
+        const refreshControl = (
+            <RefreshControl
+                refreshing={tab.refreshing}
+                onRefresh={tab.onRefresh}
+                progressViewOffset={hasHeader ? headerHeight : 0}
+            />
+        );
+
+        const commonProps = {
+            ref: (ref) => {
+                if (ref) {
+                    listRefs.current[route.key] = ref;
+                }
+            },
+            contentContainerStyle: {
+                paddingTop: hasHeader ? headerHeight + TabBarHeight : TabBarHeight,
+                minHeight: Dimensions.get('window').height,
+            },
+            scrollEventThrottle: 16,
+            onScroll: hasHeader ? onScroll : undefined,
+            refreshControl: refreshControl,
+        };
+
+        if (ListComponent === AnimatedScrollView) {
+            return (
+                <ListComponent {...commonProps}>
+                    {tab.component}
+                </ListComponent>
+            );
+        }
+
         return (
-            <Animated.ScrollView
-                ref={(ref) => {
-                    if (ref) {
-                        scrollViewRefs.current[route.key] = ref;
-                    }
-                }}
-                contentContainerStyle={{
-                    paddingTop: hasHeader ? headerHeight + TabBarHeight : TabBarHeight,
-                    minHeight: Dimensions.get('window').height,
-                }}
-                scrollEventThrottle={16}
-                onScroll={hasHeader ? Animated.event(
-                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                    { useNativeDriver: true }
-                ) : undefined}
-            >
-                {tab.component}
-            </Animated.ScrollView>
+            <ListComponent
+                {...commonProps}
+                data={tab.data}
+                renderItem={tab.renderItem}
+                keyExtractor={tab.keyExtractor}
+                onEndReached={tab.onEndReached}
+                onEndReachedThreshold={0.5}
+                onViewableItemsChanged={tab.onViewableItemsChanged}
+                viewabilityConfig={tab.viewabilityConfig}
+                estimatedItemSize={tab.estimatedItemSize}
+            />
         );
     }, [tabs, headerHeight, scrollY, hasHeader]);
+
+
+
 
     return (
         <View style={styles.container}>
