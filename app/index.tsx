@@ -171,7 +171,6 @@ const App = () => {
         });
 
 
-
         return (
             <Animated.View
                 style={[
@@ -190,26 +189,6 @@ const App = () => {
             </Animated.View>
         );
     };
-
-    // const HeaderComponent = ({ scrollY, headerHeight, effectiveHeaderHeightOnScroll }) => {
-    //     const contentTranslateY = scrollY.interpolate({
-    //         inputRange: [0, headerHeight - effectiveHeaderHeightOnScroll],
-    //         outputRange: [0, -(headerHeight - effectiveHeaderHeightOnScroll)],
-    //         extrapolate: 'clamp',
-    //     });
-    //
-    //     return (
-    //         <View style={styles.headerContainer}>
-    //             <Animated.View style={[
-    //                 styles.contentContainer,
-    //                 { transform: [{ translateY: contentTranslateY }] }
-    //             ]}>
-    //                 <Text style={styles.headerTitle}>My App</Text>
-    //                 <Text style={styles.headerSubtitle}>Welcome to the enhanced TabView demo!</Text>
-    //             </Animated.View>
-    //         </View>
-    //     );
-    // };
 
 
 

@@ -148,18 +148,6 @@ const TabViewComponent = React.memo(({
         if (!hasHeader) return null;
         return (
             <Animated.View
-                {...headerPanResponder.panHandlers}
-                onLayout={(event) => {
-                    const height = event.nativeEvent.layout.height;
-                    setHeaderHeight(height);
-                }}
-                style={[
-                    styles.header,
-                    {
-                        height: HeaderComponent ? undefined : headerHeightOnScroll,
-                        transform: [{ translateY: headerTranslateY }]
-                    }
-                ]}
             >
                 {HeaderComponent && (
                     <HeaderComponent
