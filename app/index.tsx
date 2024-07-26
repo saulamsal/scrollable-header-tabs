@@ -163,7 +163,7 @@ const App = () => {
         }));
     }, [postsData, followingData, videosData]);
 
-    const HeaderComponent = ({ scrollY, headerHeight, effectiveHeaderHeightOnScroll }) => {
+    const HeaderComponent = ({ scrollY, headerHeight, effectiveHeaderHeightOnScroll, isTabSticky }) => {
         const contentTranslateY = scrollY.interpolate({
             inputRange: [0, headerHeight - effectiveHeaderHeightOnScroll],
             outputRange: [0, -(headerHeight - effectiveHeaderHeightOnScroll)],
