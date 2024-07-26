@@ -26,7 +26,7 @@ const MAX_VIEWABLE_ITEMS = 1;
 export const ViewabilityItemsContext = createContext([]);
 export const ItemKeyContext = createContext(undefined);
 
-const ViewabilityTracker = React.forwardRef(({ listType, onScroll: parentOnScroll, scrollY, ...props }, ref) => {
+const ViewabilityTracker = React.forwardRef(({ listType, onScroll: parentOnScroll, ...props }, ref) => {
     const [visibleItems, setVisibleItems] = useState([]);
     const { renderItem: originalRenderItem, onEndReached } = props;
     const hasScrolled = useRef(false);
@@ -53,10 +53,12 @@ const ViewabilityTracker = React.forwardRef(({ listType, onScroll: parentOnScrol
         if (!hasScrolled.current) {
             hasScrolled.current = true;
         }
-        const offsetY = event.nativeEvent.contentOffset.y;
-        scrollY.setValue(offsetY);
-        parentOnScroll && parentOnScroll(event);
-    }, [scrollY, parentOnScroll]);
+        if (typeof parentOnScroll === 'function') {
+            parentOnScroll(event);
+        } else if (parentOnScroll && typeof parentOnScroll.onScroll === 'function') {
+            parentOnScroll.onScroll(event);
+        }
+    }, [parentOnScroll]);
 
     const ListComponent = listType === 'FlatList' ? AnimatedFlatList :
         listType === 'FlashList' ? AnimatedFlashList :
@@ -74,10 +76,7 @@ const ViewabilityTracker = React.forwardRef(({ listType, onScroll: parentOnScrol
                     itemVisiblePercentThreshold: 100,
                 }}
                 onEndReached={handleEndReached}
-                onScroll={Animated.event(
-                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                    { useNativeDriver: true, listener: handleScroll }
-                )}
+                onScroll={handleScroll}
                 scrollEventThrottle={16}
             />
         </ViewabilityItemsContext.Provider>
@@ -214,14 +213,14 @@ const TabViewComponent = React.memo(({
     }, [routes, index, tabBarStyle, tabBarTranslateY, hasHeader, renderTabLabel, onTabChange]);
 
 
-    const handleScroll = useCallback((event) => {
-        const offsetY = event.nativeEvent.contentOffset.y;
-        scrollY.setValue(offsetY);
-    }, [scrollY]);
-
     const renderScene = useCallback(({ route }) => {
         const tab = tabs.find(t => t.name === route.key);
         if (!tab) return null;
+
+        const onScroll = Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: true }
+        );
 
         const refreshControl = (
             <RefreshControl
@@ -243,7 +242,7 @@ const TabViewComponent = React.memo(({
             },
             scrollEventThrottle: 16,
             refreshControl: refreshControl,
-            onScroll: handleScroll,
+            onScroll: onScroll,  // Pass the Animated.event object directly
         };
 
         if (tab.listType === 'ScrollView') {
@@ -264,10 +263,9 @@ const TabViewComponent = React.memo(({
                 onEndReached={tab.onEndReached}
                 onEndReachedThreshold={0.5}
                 estimatedItemSize={tab.estimatedItemSize}
-                scrollY={scrollY}  // Pass scrollY as a prop
             />
         );
-    }, [tabs, headerHeight, hasHeader, handleScroll]);
+    }, [tabs, headerHeight, scrollY, hasHeader]);
 
 
 
