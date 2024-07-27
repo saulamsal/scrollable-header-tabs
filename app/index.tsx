@@ -1,18 +1,15 @@
-import React, { useState, useCallback, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
-import Animated, { useAnimatedStyle,useAnimatedReaction, interpolateColor } from 'react-native-reanimated';
-import ScrollableHeaderTabs, { ViewabilityItemsContext, ItemKeyContext } from './components/ScrollableHeaderTabs';
-import {GestureHandlerRootView} from 'react-native-gesture-handler';
-import { useSharedValue,
-    interpolate
- } from 'react-native-reanimated';
+import React, { useState, useCallback, useRef } from 'react';
+import { View, Text, StyleSheet, Alert, RefreshControl } from 'react-native';
+import { Tabs, CollapsibleRef, MaterialTabBar } from 'react-native-collapsible-tab-view';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const ITEMS_PER_PAGE = 20;
 
 const generateFakeData = (startIndex, count) => {
     return Array.from({ length: count }, (_, i) => ({
         id: startIndex + i,
-        title: `Item ${startIndex + i}`
+        title: `Item ${startIndex + i}`,
+        isVisible: false
     }));
 };
 
@@ -20,42 +17,23 @@ const fakeApiCall = (delay = 1500) => {
     return new Promise(resolve => setTimeout(resolve, delay));
 };
 
-const PostItem = ({ item }) => {
-    console.log('rendered for flashlist');
-    const id = useContext(ItemKeyContext);
-    const visibleItems = useContext(ViewabilityItemsContext);
-    const isCentered = visibleItems.includes(id);
+const PostItem = React.memo(({ item }) => (
+    <View style={[styles.postItem, item.isVisible && styles.visibleItem]}>
+        <Text>Post {item.title} {item.isVisible ? '(Visible)' : ''}</Text>
+    </View>
+));
 
-    return (
-        <View style={[styles.postItem, isCentered && styles.centeredItem]}>
-            <Text>Post {item.title}</Text>
-        </View>
-    );
-};
+const FollowingItem = React.memo(({ item }) => (
+    <View style={[styles.followingItem, item.isVisible && styles.visibleItem]}>
+        <Text>Following {item.title} {item.isVisible ? '(Visible)' : ''}</Text>
+    </View>
+));
 
-const FollowingItem = ({ item }) => {
-    const id = useContext(ItemKeyContext);
-    const visibleItems = useContext(ViewabilityItemsContext);
-    const isCentered = visibleItems.includes(id);
-
-    return (
-        <View style={[styles.followingItem, isCentered && styles.centeredItem]}>
-            <Text>Following {item.title}</Text>
-        </View>
-    );
-};
-
-const VideoItem = ({ item }) => {
-    const id = useContext(ItemKeyContext);
-    const visibleItems = useContext(ViewabilityItemsContext);
-    const isCentered = visibleItems.includes(id);
-
-    return (
-        <View style={[styles.videoItem, isCentered && styles.centeredItem]}>
-            <Text>Video {item.title}</Text>
-        </View>
-    );
-};
+const VideoItem = React.memo(({ item }) => (
+    <View style={[styles.videoItem, item.isVisible && styles.visibleItem]}>
+        <Text>Video {item.title} {item.isVisible ? '(Visible)' : ''}</Text>
+    </View>
+));
 
 const App = () => {
     const [postsData, setPostsData] = useState(generateFakeData(1, ITEMS_PER_PAGE));
@@ -63,6 +41,7 @@ const App = () => {
     const [videosData, setVideosData] = useState(generateFakeData(1, ITEMS_PER_PAGE));
     const [refreshing, setRefreshing] = useState({ posts: false, following: false, videos: false });
     const [loading, setLoading] = useState({ posts: false, following: false, videos: false });
+    const collapsibleRef = useRef<CollapsibleRef>();
 
     const onRefresh = useCallback(async (tabName) => {
         setRefreshing(prev => ({ ...prev, [tabName]: true }));
@@ -107,138 +86,139 @@ const App = () => {
         setLoading(prev => ({ ...prev, [tabName]: false }));
     }, [loading, postsData, followingData, videosData]);
 
-    const [tabs, setTabs] = useState([
-        {
-            name: 'For You',
-            label: 'For You',
-            listType: 'FlashList',
-            data: postsData,
-            renderItem: ({ item }) => <PostItem item={item} />,
-            keyExtractor: (item) => `post-${item.id}`,
-            onRefresh: () => onRefresh('Posts'),
-            refreshing: refreshing.posts,
-            onEndReached: () => onEndReached('Posts'),
-            estimatedItemSize: 300,
-            onScrollBeginDrag: () => console.log('flashlist scroll begin')
-        },
-        {
-            name: 'Following',
-            label: 'Following',
-            listType: 'FlatList',
-            data: followingData,
-            renderItem: ({ item }) => <FollowingItem item={item} />,
-            keyExtractor: (item) => `following-${item.id}`,
-            onRefresh: () => onRefresh('Following'),
-            refreshing: refreshing.following,
-            onEndReached: () => onEndReached('Following'),
-        },
-        {
-            name: 'Recap',
-            label: 'Recap',
-            listType: 'ScrollView',
-            component: () => (
-                <View>
-                    {videosData.map(item => (
-                        <VideoItem key={`video-${item.id}`} item={item} />
-                    ))}
-                </View>
-            ),
-            onRefresh: () => onRefresh('Videos'),
-            refreshing: refreshing.videos,
-        },
-    ]);
-
-
-    useEffect(() => {
-        setTabs(prevTabs => prevTabs.map(tab => {
-            if (tab.name === 'For You') {
-                return { ...tab, data: postsData };
-            } else if (tab.name === 'Following') {
-                return { ...tab, data: followingData };
-            } else if (tab.name === 'Recap') {
-                return {
-                    ...tab,
-                    component: () => (
-                        <View>
-                            {videosData.map(item => (
-                                <VideoItem key={`video-${item.id}`} item={item} />
-                            ))}
-                        </View>
-                    ),
-                };
-            }
-            return tab;
-        }));
-    }, [postsData, followingData, videosData]);
-
-
-
-    const scrollY = useSharedValue(0); // Add this line
-
-    const HeaderComponent = useCallback(({ scrollY, headerHeight, effectiveHeaderHeightOnScroll }) => {
-        const animatedStyle = useAnimatedStyle(() => {
-            const backgroundColor = interpolateColor(
-                scrollY.value,
-                [0, headerHeight - effectiveHeaderHeightOnScroll],
-                ['#3498db', '#2980b9']
-            );
-            return {
-                backgroundColor,
-            };
-        });
-
-        const animatedTextStyle = useAnimatedStyle(() => {
-            const opacity = interpolate(
-                scrollY.value,
-                [0, headerHeight - effectiveHeaderHeightOnScroll],
-                [1, 0.5]
-            );
-            return {
-                opacity,
-            };
-        });
-
-        console.log('HeaderComponent scrollY:', scrollY.value); // Add this line
-
+    const HeaderComponent = useCallback(() => {
         return (
-            <Animated.View style={[styles.headerContainer, animatedStyle]}>
-                <Animated.View style={[styles.contentContainer, animatedTextStyle]}>
-                    <Animated.Text style={[styles.headerTitle, animatedTextStyle]}>My App</Animated.Text>
-                    <Animated.Text style={[styles.headerSubtitle, animatedTextStyle]}>Welcome to the enhanced TabView demo!</Animated.Text>
-                </Animated.View>
-            </Animated.View>
+            <View style={styles.headerContainer}>
+                <Text style={styles.headerTitle}>My App</Text>
+                <Text style={styles.headerSubtitle}>Welcome to the enhanced TabView demo!</Text>
+            </View>
         );
     }, []);
 
+    const renderItem = useCallback((type) => ({ item }) => {
+        switch (type) {
+            case 'Posts':
+                return <PostItem item={item} />;
+            case 'Following':
+                return <FollowingItem item={item} />;
+            case 'Videos':
+                return <VideoItem item={item} />;
+        }
+    }, []);
+
+    const onViewableItemsChanged = useCallback((type) => ({ viewableItems, changed }) => {
+        const updateData = (prevData) => {
+            const newData = [...prevData];
+            changed.forEach((change) => {
+                const index = newData.findIndex((item) => item.id === change.item.id);
+                if (index !== -1) {
+                    newData[index] = { ...newData[index], isVisible: change.isViewable };
+                }
+            });
+            return newData;
+        };
+
+        switch (type) {
+            case 'Posts':
+                setPostsData(updateData);
+                break;
+            case 'Following':
+                setFollowingData(updateData);
+                break;
+            case 'Videos':
+                setVideosData(updateData);
+                break;
+        }
+
+        // Here you can trigger your API calls for view count or start/stop video playback
+        viewableItems.forEach((viewableItem) => {
+            if (viewableItem.isViewable) {
+                console.log(`Item ${viewableItem.item.id} is now visible`);
+                // Call your API here, e.g.:
+                // updateViewCount(viewableItem.item.id);
+                // or
+                // startVideoPlayback(viewableItem.item.id);
+            }
+        });
+    }, []);
+
+    const viewabilityConfig = useRef({
+        itemVisiblePercentThreshold: 50 // Item is considered visible when 50% or more of it is visible
+    }).current;
+
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-            <ScrollableHeaderTabs
-                tabs={tabs}
-                HeaderComponent={HeaderComponent}
-                headerHeightOnScroll={120}
-                scrollY={scrollY}
-                materialTopTabProps={{
-                    lazy: true,
-                    lazyPreloadDistance: 2,
-                    tabBarScrollEnabled: true,
-                    tabStyle: { width: 'auto' },
-                    labelStyle: { fontSize: 14, color: 'black' },
-                }}
-            />
+            <Tabs.Container
+                ref={collapsibleRef}
+                renderHeader={HeaderComponent}
+                headerHeight={120}
+                renderTabBar={props => <MaterialTabBar {...props} scrollEnabled tabStyle={{ width: 'auto' }} />}
+            >
+                <Tabs.Tab name="For You" label="For You">
+                    <Tabs.FlashList
+                        data={postsData}
+                        renderItem={renderItem('Posts')}
+                        keyExtractor={(item) => `post-${item.id}`}
+                        estimatedItemSize={300}
+                        onEndReached={() => onEndReached('Posts')}
+                        onEndReachedThreshold={0.1}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing.posts}
+                                onRefresh={() => onRefresh('Posts')}
+                            />
+                        }
+                        onViewableItemsChanged={onViewableItemsChanged('Posts')}
+                        viewabilityConfig={viewabilityConfig}
+                    />
+                </Tabs.Tab>
+                <Tabs.Tab name="Following" label="Following">
+                    <Tabs.FlatList
+                        data={followingData}
+                        renderItem={renderItem('Following')}
+                        keyExtractor={(item) => `following-${item.id}`}
+                        onEndReached={() => onEndReached('Following')}
+                        onEndReachedThreshold={0.1}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing.following}
+                                onRefresh={() => onRefresh('Following')}
+                            />
+                        }
+                        onViewableItemsChanged={onViewableItemsChanged('Following')}
+                        viewabilityConfig={viewabilityConfig}
+                    />
+                </Tabs.Tab>
+                <Tabs.Tab name="Recap" label="Recap">
+                    <Tabs.FlashList
+                        data={videosData}
+                        renderItem={renderItem('Videos')}
+                        keyExtractor={(item) => `video-${item.id}`}
+                        estimatedItemSize={300}
+                        onEndReached={() => onEndReached('Videos')}
+                        onEndReachedThreshold={0.1}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing.videos}
+                                onRefresh={() => onRefresh('Videos')}
+                            />
+                        }
+                        onViewableItemsChanged={onViewableItemsChanged('Videos')}
+                        viewabilityConfig={viewabilityConfig}
+                    />
+                </Tabs.Tab>
+            </Tabs.Container>
         </GestureHandlerRootView>
     );
 };
-
 
 const styles = StyleSheet.create({
     headerContainer: {
         width: '100%',
         height: '100%',
-    },
-    contentContainer: {
-        flex: 1,
         justifyContent: 'center',
-        paddingHorizontal: 20,
+        alignItems: 'center',
+        backgroundColor: '#3498db',
     },
     headerTitle: {
         fontSize: 24,
@@ -271,7 +251,7 @@ const styles = StyleSheet.create({
         height: 300,
         backgroundColor: '#f9f9f9',
     },
-    centeredItem: {
+    visibleItem: {
         backgroundColor: '#e6e6e6',
     },
 });

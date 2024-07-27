@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="0c5beba0-ac69-4fee-9cff-9fc779e775bd" name="Changes" comment="wip - firing the onSroll for flatlist and scrollview" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ComposerSettings">
+    <execution />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="PhpWorkspaceProjectConfiguration" interpreter_name="/usr/local/Cellar/php/8.1.8/bin/php" />
+  <component name="ProjectId" id="2jlWCfGTVO75WNrPDsOiKhLkq6w" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "/Users/saulamsal/Files/www/scrollable-header-tabs",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "ts.external.directory.path": "/Users/saulamsal/Files/www/scrollable-header-tabs/node_modules/typescript/lib",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="0c5beba0-ac69-4fee-9cff-9fc779e775bd" name="Changes" comment="" />
+      <created>1721962017894</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1721962017894</updated>
+      <workItem from="1721962025458" duration="25398000" />
+    </task>
+    <task id="LOCAL-00001" summary="working on support for all kinds of lists+scrollviews">
+      <created>1721970934800</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1721970934800</updated>
+    </task>
+    <task id="LOCAL-00002" summary="fixed multiple fire  for onEndReach but bug on header(doesnt collapse)">
+      <created>1721975000551</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1721975000551</updated>
+    </task>
+    <task id="LOCAL-00003" summary="fixed collapse of header">
+      <created>1721975257011</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1721975257011</updated>
+    </task>
+    <task id="LOCAL-00004" summary="only issue:  collapse of header not working...">
+      <created>1721977526830</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1721977526830</updated>
+    </task>
+    <task id="LOCAL-00005" summary="only issue:  collapse of header not working...">
+      <created>1721978212903</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1721978212903</updated>
+    </task>
+    <task id="LOCAL-00006" summary="only issue:  collapse of header not working... pending check on tabBarTranslateY and headerTranslateY">
+      <created>1721980084405</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1721980084405</updated>
+    </task>
+    <task id="LOCAL-00007" summary="getting ready to fixed header+tab showing">
+      <created>1722021542753</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1722021542753</updated>
+    </task>
+    <task id="LOCAL-00008" summary="simple header collapsible working">
+      <created>1722024813592</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1722024813592</updated>
+    </task>
+    <task id="LOCAL-00009" summary="old way reverted but new names">
+      <created>1722047086677</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1722047086677</updated>
+    </task>
+    <task id="LOCAL-00010" summary="wip - firing the onSroll for flatlist and scrollview">
+      <created>1722058741671</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1722058741671</updated>
+    </task>
+    <task id="LOCAL-00011" summary="wip - firing the onSroll for flatlist and scrollview">
+      <created>1722061240993</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1722061240993</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="working on support for all kinds of lists+scrollviews" />
+    <MESSAGE value="fixed multiple fire  for onEndReach but bug on header(doesnt collapse)" />
+    <MESSAGE value="fixed collapse of header" />
+    <MESSAGE value="only issue:  collapse of header not working..." />
+    <MESSAGE value="only issue:  collapse of header not working... pending check on tabBarTranslateY and headerTranslateY" />
+    <MESSAGE value="getting ready to fixed header+tab showing" />
+    <MESSAGE value="simple header collapsible working" />
+    <MESSAGE value="old way reverted but new names" />
+    <MESSAGE value="wip - firing the onSroll for flatlist and scrollview" />
+    <option name="LAST_COMMIT_MESSAGE" value="wip - firing the onSroll for flatlist and scrollview" />
+  </component>
+</project>
