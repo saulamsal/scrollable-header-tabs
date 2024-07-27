@@ -23,6 +23,10 @@ export const styles = StyleSheet.create({
     containerStyle: {
         zIndex: 0,
     },
+    headerImage: {
+        width: 50,
+        height: 50,
+    },
 
     headerSubtitle: {
         fontSize: 16,

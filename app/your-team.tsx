@@ -1,10 +1,11 @@
 import React, { useState, useCallback, useRef, useMemo } from 'react';
-import { View, Text, StyleSheet, Button, Alert, RefreshControl, Dimensions } from 'react-native';
+import { View, Image, Text, StyleSheet, Button, Alert, RefreshControl, Dimensions } from 'react-native';
 import { Tabs, CollapsibleRef, MaterialTabBar, useHeaderMeasurements, useCurrentTabScrollY } from 'react-native-collapsible-tab-view';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { styles } from './styles';
 import Animated, { interpolate, useAnimatedStyle } from 'react-native-reanimated';
 import { Link } from 'expo-router';
+
 
 const ITEMS_PER_PAGE = 20;
 
@@ -24,7 +25,8 @@ const HeaderComponent = () => {
                 <Text>Back</Text>
             </Link>
             <View>
-                <Text style={styles.headerTitle} pointerEvents="auto">Manchester United</Text>
+                <Image pointerEvents="auto"  source={{uri: 'https://upload.wikimedia.org/wikipedia/en/thumb/7/7a/Manchester_United_FC_crest.svg/640px-Manchester_United_FC_crest.svg.png'}} style={styles.headerImage} />
+                <Text style={styles.headerTitle} >Manchester United</Text>
                 <Text pointerEvents="auto">Premier League</Text>
             </View>
             <Button onPress={() => alert('follow')} title="Follow" />
@@ -62,6 +64,8 @@ const VideoItem = React.memo(({ item }) => (
     </View>
 ), (prevProps, nextProps) => prevProps.item.isInCenter === nextProps.item.isInCenter);
 
+type TabName = 'posts' | 'following' | 'videos';
+
 const App = () => {
     const [postsData, setPostsData] = useState(generateFakeData(1, ITEMS_PER_PAGE));
     const [followingData, setFollowingData] = useState(generateFakeData(1, ITEMS_PER_PAGE));
@@ -98,24 +102,24 @@ const App = () => {
         handleViewableItemsChanged(tabName, { viewableItems, changed: [] });
     }, []);
 
-    const onEndReached = useCallback(async (tabName) => {
+    const onEndReached = useCallback(async (tabName: TabName) => {
         if (loading[tabName]) return;
         setLoading(prev => ({ ...prev, [tabName]: true }));
         await fakeApiCall(1000);
         const newData = generateFakeData(
-            tabName === 'Posts' ? postsData.length + 1 :
-                tabName === 'Following' ? followingData.length + 1 :
+            tabName === 'posts' ? postsData.length + 1 :
+                tabName === 'following' ? followingData.length + 1 :
                     videosData.length + 1,
             ITEMS_PER_PAGE
         );
         switch (tabName) {
-            case 'Posts':
+            case 'posts':
                 setPostsData(prev => [...prev, ...newData]);
                 break;
-            case 'Following':
+            case 'following':
                 setFollowingData(prev => [...prev, ...newData]);
                 break;
-            case 'Videos':
+            case 'videos':
                 setVideosData(prev => [...prev, ...newData]);
                 break;
         }
@@ -161,30 +165,24 @@ const App = () => {
         console.log(`Item ${maxOverlapItem.item.id} is now in the center`);
     }, []);
 
-    const updateCenterItem = useCallback((type, centerItemId) => {
+    const updateCenterItem = useCallback((type: TabName, centerItemId: number) => {
         const updateFn = (prevData) => prevData.map(item => ({
             ...item,
             isInCenter: item.id === centerItemId
         }));
 
         switch (type) {
-            case 'Posts':
+            case 'posts':
                 setPostsData(updateFn);
                 break;
-            case 'Following':
+            case 'following':
                 setFollowingData(updateFn);
                 break;
-            case 'Videos':
+            case 'videos':
                 setVideosData(updateFn);
                 break;
         }
     }, []);
-
-    const getItemLayout = useCallback((data, index) => ({
-        length: 300,
-        offset: 300 * index,
-        index,
-    }), []);
 
     const viewabilityConfig = useRef({
         itemVisiblePercentThreshold: 95
@@ -209,7 +207,7 @@ const App = () => {
                         renderItem={renderItem('Posts')}
                         keyExtractor={(item) => `post-${item.id}`}
                         estimatedItemSize={300}
-                        onEndReached={() => onEndReached('Posts')}
+                        onEndReached={() => onEndReached('posts')}
                         onEndReachedThreshold={0.1}
                         refreshControl={
                             <RefreshControl
@@ -219,11 +217,6 @@ const App = () => {
                         }
                         onViewableItemsChanged={handleViewableItemsChanged.bind(null, 'Posts')}
                         viewabilityConfig={viewabilityConfig}
-                        getItemLayout={getItemLayout}
-                        maxToRenderPerBatch={10}
-                        updateCellsBatchingPeriod={50}
-                        initialNumToRender={5}
-                        windowSize={5}
                     />
                 </Tabs.Tab>
                 <Tabs.Tab name="Following" label="Following">
@@ -231,7 +224,7 @@ const App = () => {
                         data={followingData}
                         renderItem={renderItem('Following')}
                         keyExtractor={(item) => `following-${item.id}`}
-                        onEndReached={() => onEndReached('Following')}
+                        onEndReached={() => onEndReached('following')}
                         onEndReachedThreshold={0.1}
                         estimatedItemSize={300}
                         refreshControl={
@@ -242,11 +235,6 @@ const App = () => {
                         }
                         onViewableItemsChanged={handleViewableItemsChanged.bind(null, 'Following')}
                         viewabilityConfig={viewabilityConfig}
-                        getItemLayout={getItemLayout}
-                        maxToRenderPerBatch={10}
-                        updateCellsBatchingPeriod={50}
-                        initialNumToRender={5}
-                        windowSize={5}
                     />
                 </Tabs.Tab>
                 <Tabs.Tab name="About" label="About">
