@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 export const styles = StyleSheet.create({
     headerContainer: {
         width: '100%',
-        height: '100%',
+        height: 250,
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#3498db',
@@ -13,6 +13,14 @@ export const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: 'white',
     },
+    headerContainerStyle: {
+        zIndex: 1,
+        elevation: 1,
+    },
+    containerStyle: {
+        zIndex: 0,
+    },
+
     headerSubtitle: {
         fontSize: 16,
         color: 'white',

@@ -1,9 +1,8 @@
-import React, { useState, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, Alert, RefreshControl } from 'react-native';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
+import { View, Text, StyleSheet, Button, Alert, RefreshControl, Dimensions } from 'react-native';
 import { Tabs, CollapsibleRef, MaterialTabBar } from 'react-native-collapsible-tab-view';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { styles } from './styles';
-
 
 const ITEMS_PER_PAGE = 20;
 
@@ -11,7 +10,7 @@ const generateFakeData = (startIndex, count) => {
     return Array.from({ length: count }, (_, i) => ({
         id: startIndex + i,
         title: `Item ${startIndex + i}`,
-        isVisible: false
+        isInCenter: false
     }));
 };
 
@@ -19,23 +18,32 @@ const fakeApiCall = (delay = 1500) => {
     return new Promise(resolve => setTimeout(resolve, delay));
 };
 
-const PostItem = React.memo(({ item }) => (
-    <View style={[styles.postItem, item.isVisible && styles.visibleItem]}>
-        <Text>Post {item.title} {item.isVisible ? '(Visible)' : ''}</Text>
-    </View>
-));
+const PostItem = React.memo(
+    ({ item }) => (
+        <View style={[styles.postItem, item.isInCenter && styles.visibleItem]}>
+            <Text>Post {item.title} {item.isInCenter ? '(In Center)' : ''}</Text>
+        </View>
+    ),
+    (prevProps, nextProps) => prevProps.item.isInCenter === nextProps.item.isInCenter
+);
 
-const FollowingItem = React.memo(({ item }) => (
-    <View style={[styles.followingItem, item.isVisible && styles.visibleItem]}>
-        <Text>Following {item.title} {item.isVisible ? '(Visible)' : ''}</Text>
-    </View>
-));
+const FollowingItem = React.memo(
+    ({ item }) => (
+        <View style={[styles.followingItem, item.isInCenter && styles.visibleItem]}>
+            <Text>Following {item.title} {item.isInCenter ? '(In Center)' : ''}</Text>
+        </View>
+    ),
+    (prevProps, nextProps) => prevProps.item.isInCenter === nextProps.item.isInCenter
+);
 
-const VideoItem = React.memo(({ item }) => (
-    <View style={[styles.videoItem, item.isVisible && styles.visibleItem]}>
-        <Text>Video {item.title} {item.isVisible ? '(Visible)' : ''}</Text>
-    </View>
-));
+const VideoItem = React.memo(
+    ({ item }) => (
+        <View style={[styles.videoItem, item.isInCenter && styles.visibleItem]}>
+            <Text>Video {item.title} {item.isInCenter ? '(In Center)' : ''}</Text>
+        </View>
+    ),
+    (prevProps, nextProps) => prevProps.item.isInCenter === nextProps.item.isInCenter
+);
 
 const App = () => {
     const [postsData, setPostsData] = useState(generateFakeData(1, ITEMS_PER_PAGE));
@@ -43,7 +51,7 @@ const App = () => {
     const [videosData, setVideosData] = useState(generateFakeData(1, ITEMS_PER_PAGE));
     const [refreshing, setRefreshing] = useState({ posts: false, following: false, videos: false });
     const [loading, setLoading] = useState({ posts: false, following: false, videos: false });
-    const collapsibleRef = useRef<CollapsibleRef>();
+    const collapsibleRef = useRef();
 
     const onRefresh = useCallback(async (tabName) => {
         setRefreshing(prev => ({ ...prev, [tabName]: true }));
@@ -90,59 +98,73 @@ const App = () => {
 
     const HeaderComponent = useCallback(() => {
         return (
-            <View style={styles.headerContainer}>
+            <View style={styles.headerContainer} pointerEvents="box-none">
                 <Text style={styles.headerTitle}>My App</Text>
+                <Button title='Follow' onPress={()=>alert('asd')} />
                 <Text style={styles.headerSubtitle}>Welcome to the enhanced TabView demo!</Text>
             </View>
         );
     }, []);
 
-    const renderItem = useCallback((type) => ({ item }) => {
-        switch (type) {
-            case 'Posts':
-                return <PostItem item={item} />;
-            case 'Following':
-                return <FollowingItem item={item} />;
-            case 'Videos':
-                return <VideoItem item={item} />;
-        }
+    const renderItem = useCallback((type) => {
+        return useMemo(() => ({ item, index }) => {
+            const ItemComponent = type === 'Posts' ? PostItem : type === 'Following' ? FollowingItem : VideoItem;
+            return (
+                <View
+                    onLayout={(event) => {
+                        const layout = event.nativeEvent.layout;
+                        item.y = layout.y;
+                        item.height = layout.height;
+                    }}
+                >
+                    <ItemComponent item={item} />
+                </View>
+            );
+        }, [type]);
     }, []);
 
-    const onViewableItemsChanged = useCallback((type) => ({ viewableItems, changed }) => {
-        const updateData = (prevData) => {
-            const newData = [...prevData];
-            changed.forEach((change) => {
-                const index = newData.findIndex((item) => item.id === change.item.id);
-                if (index !== -1) {
-                    newData[index] = { ...newData[index], isVisible: change.isViewable };
-                }
+    const onViewableItemsChanged = useCallback((type) => {
+        return useMemo(() => ({ viewableItems, changed }) => {
+            if (viewableItems.length === 0) return;
+
+            const screenHeight = Dimensions.get('window').height;
+            const screenCenter = screenHeight / 2;
+            let closestItem = viewableItems.reduce((prev, current) => {
+                const prevDistance = Math.abs(prev.item.y + prev.item.height / 2 - screenCenter);
+                const currDistance = Math.abs(current.item.y + current.item.height / 2 - screenCenter);
+                return prevDistance < currDistance ? prev : current;
             });
-            return newData;
-        };
+
+            updateCenterItem(type, closestItem.item.id);
+            console.log(`Item ${closestItem.item.id} is now in the center`);
+        }, [type]);
+    }, []);
+
+    const updateCenterItem = useCallback((type, centerItemId) => {
+        
+        const updateFn = (prevData) => prevData.map(item => ({
+            ...item,
+            isInCenter: item.id === centerItemId
+        }));
 
         switch (type) {
             case 'Posts':
-                setPostsData(updateData);
+                setPostsData(updateFn);
                 break;
             case 'Following':
-                setFollowingData(updateData);
+                setFollowingData(updateFn);
                 break;
             case 'Videos':
-                setVideosData(updateData);
+                setVideosData(updateFn);
                 break;
         }
-
-        // Here you can trigger your API calls for view count or start/stop video playback
-        viewableItems.forEach((viewableItem) => {
-            if (viewableItem.isViewable) {
-                console.log(`Item ${viewableItem.item.id} is now visible`);
-                // Call your API here, e.g.:
-                // updateViewCount(viewableItem.item.id);
-                // or
-                // startVideoPlayback(viewableItem.item.id);
-            }
-        });
     }, []);
+
+    const getItemLayout = useCallback((data, index) => ({
+        length: 300, // Assuming each item has a fixed height of 300
+        offset: 300 * index,
+        index,
+    }), []);
 
     const viewabilityConfig = useRef({
         itemVisiblePercentThreshold: 50 // Item is considered visible when 50% or more of it is visible
@@ -155,6 +177,9 @@ const App = () => {
                 renderHeader={HeaderComponent}
                 headerHeight={120}
                 renderTabBar={props => <MaterialTabBar {...props} scrollEnabled tabStyle={{ width: 'auto' }} />}
+                snapThreshold={0.5}
+                headerContainerStyle={styles.headerContainerStyle}
+                containerStyle={styles.containerStyle}
             >
                 <Tabs.Tab name="For You" label="For You">
                     <Tabs.FlashList
@@ -172,6 +197,11 @@ const App = () => {
                         }
                         onViewableItemsChanged={onViewableItemsChanged('Posts')}
                         viewabilityConfig={viewabilityConfig}
+                        getItemLayout={getItemLayout}
+                        maxToRenderPerBatch={10}
+                        updateCellsBatchingPeriod={50}
+                        initialNumToRender={5}
+                        windowSize={5}
                     />
                 </Tabs.Tab>
                 <Tabs.Tab name="Following" label="Following">
@@ -181,6 +211,7 @@ const App = () => {
                         keyExtractor={(item) => `following-${item.id}`}
                         onEndReached={() => onEndReached('Following')}
                         onEndReachedThreshold={0.1}
+                        estimatedItemSize={300}
                         refreshControl={
                             <RefreshControl
                                 refreshing={refreshing.following}
@@ -189,6 +220,11 @@ const App = () => {
                         }
                         onViewableItemsChanged={onViewableItemsChanged('Following')}
                         viewabilityConfig={viewabilityConfig}
+                        getItemLayout={getItemLayout}
+                        maxToRenderPerBatch={10}
+                        updateCellsBatchingPeriod={50}
+                        initialNumToRender={5}
+                        windowSize={5}
                     />
                 </Tabs.Tab>
                 <Tabs.Tab name="Recap" label="Recap">
@@ -207,13 +243,16 @@ const App = () => {
                         }
                         onViewableItemsChanged={onViewableItemsChanged('Videos')}
                         viewabilityConfig={viewabilityConfig}
+                        getItemLayout={getItemLayout}
+                        maxToRenderPerBatch={10}
+                        updateCellsBatchingPeriod={50}
+                        initialNumToRender={5}
+                        windowSize={5}
                     />
                 </Tabs.Tab>
             </Tabs.Container>
         </GestureHandlerRootView>
     );
 };
-
-
 
 export default App;
