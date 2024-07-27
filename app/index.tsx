@@ -23,7 +23,7 @@ const HeaderComponent = () => {
             <View>
                 <Text style={styles.headerTitle} pointerEvents="auto">HomePage</Text>
             </View>
-            <Link href="/sticky-navigation">
+            <Link href="/your-team">
                 <Text>Your Team</Text>
             </Link>
         </Animated.View>
