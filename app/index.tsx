@@ -10,6 +10,33 @@ import Animated, { interpolate, useAnimatedStyle } from 'react-native-reanimated
 
 const ITEMS_PER_PAGE = 20;
 
+
+const HeaderComponent = () => {
+    const { top, height } = useHeaderMeasurements();
+    const scrollY = useCurrentTabScrollY();
+
+    const headerAnimatedStyle = useAnimatedStyle(() => {
+        const opacity = interpolate(
+            scrollY.value,
+            [0, 60],
+            [1, 0],
+            'clamp'
+        );
+
+        return {
+            opacity,
+        };
+    });
+
+    return (
+        <Animated.View style={[styles.headerContainer, headerAnimatedStyle]} pointerEvents="box-none">
+            <Text style={styles.headerTitle} pointerEvents="auto">SportApp</Text>
+            <Button title='Follow' pointerEvents="auto" onPress={() => alert('asd')} />
+        </Animated.View>
+    );
+};
+
+
 const generateFakeData = (startIndex, count) => {
     return Array.from({ length: count }, (_, i) => ({
         id: startIndex + i,
@@ -48,36 +75,6 @@ const VideoItem = React.memo(
     ),
     (prevProps, nextProps) => prevProps.item.isInCenter === nextProps.item.isInCenter
 );
-
-
-
-const HeaderComponent = () => {
-    // const { top, height } = useHeaderMeasurements()
-    // const scrollY = useCurrentTabScrollY()
-
-    // const headerAnimatedStyle = useAnimatedStyle(() => {
-    //     const opacity = interpolate(
-    //         scrollY.value,
-    //         [0, 60],
-    //         [1, 0],
-    //         'clamp'
-    //     );
-
-    //     return {
-    //         opacity,
-    //     };
-    // });
-
-    return (
-        <Animated.View style={[styles.headerContainer,
-            // headerAnimatedStyle
-        ]} pointerEvents="box-none">
-            <Text style={styles.headerTitle} pointerEvents="auto">SportApp</Text>
-            <Button title='Follow' pointerEvents="auto"  onPress={() => alert('asd')} />
-        </Animated.View>
-    );
-};
-
 
 const App = () => {
     const [postsData, setPostsData] = useState(generateFakeData(1, ITEMS_PER_PAGE));
@@ -205,14 +202,17 @@ const App = () => {
     }), []);
 
     const viewabilityConfig = useRef({
-        itemVisiblePercentThreshold: 95 
+        itemVisiblePercentThreshold: 95
     }).current;
+
+
+
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
             <Tabs.Container
                 ref={collapsibleRef}
-                renderHeader={HeaderComponent}
+                renderHeader={() => <HeaderComponent />}
                 headerHeight={120}
                 renderTabBar={props => <MaterialTabBar {...props} scrollEnabled />}
                 snapThreshold={0.5}
