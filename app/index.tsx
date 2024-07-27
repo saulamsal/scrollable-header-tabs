@@ -2,6 +2,8 @@ import React, { useState, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, Alert, RefreshControl } from 'react-native';
 import { Tabs, CollapsibleRef, MaterialTabBar } from 'react-native-collapsible-tab-view';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { styles } from './styles';
+
 
 const ITEMS_PER_PAGE = 20;
 
@@ -173,7 +175,7 @@ const App = () => {
                     />
                 </Tabs.Tab>
                 <Tabs.Tab name="Following" label="Following">
-                    <Tabs.FlatList
+                    <Tabs.FlashList
                         data={followingData}
                         renderItem={renderItem('Following')}
                         keyExtractor={(item) => `following-${item.id}`}
@@ -212,48 +214,6 @@ const App = () => {
     );
 };
 
-const styles = StyleSheet.create({
-    headerContainer: {
-        width: '100%',
-        height: '100%',
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#3498db',
-    },
-    headerTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: 'white',
-    },
-    headerSubtitle: {
-        fontSize: 16,
-        color: 'white',
-        marginTop: 5,
-    },
-    postItem: {
-        padding: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
-        height: 300,
-        backgroundColor: '#f9f9f9',
-    },
-    followingItem: {
-        padding: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
-        height: 300,
-        backgroundColor: '#f9f9f9',
-    },
-    videoItem: {
-        padding: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
-        height: 300,
-        backgroundColor: '#f9f9f9',
-    },
-    visibleItem: {
-        backgroundColor: '#e6e6e6',
-    },
-});
+
 
 export default App;
