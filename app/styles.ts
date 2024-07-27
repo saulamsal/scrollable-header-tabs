@@ -3,10 +3,13 @@ import { StyleSheet } from "react-native";
 export const styles = StyleSheet.create({
     headerContainer: {
         width: '100%',
-        height: 450,
-        justifyContent: 'center',
+        justifyContent: 'space-between',
         alignItems: 'center',
         backgroundColor: '#3498db',
+        flexDirection: 'row',
+        paddingHorizontal: 16,
+        paddingVertical: 20,
+        
     },
     headerTitle: {
         fontSize: 24,

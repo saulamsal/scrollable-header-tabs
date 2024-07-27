@@ -1,8 +1,12 @@
 import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, Button, Alert, RefreshControl, Dimensions } from 'react-native';
-import { Tabs, CollapsibleRef, MaterialTabBar } from 'react-native-collapsible-tab-view';
+
+import { Tabs, CollapsibleRef, MaterialTabBar, useHeaderMeasurements, useCurrentTabScrollY } from 'react-native-collapsible-tab-view'; 
+
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { styles } from './styles';
+import Animated, { interpolate, useAnimatedStyle } from 'react-native-reanimated';
+
 
 const ITEMS_PER_PAGE = 20;
 
@@ -44,6 +48,36 @@ const VideoItem = React.memo(
     ),
     (prevProps, nextProps) => prevProps.item.isInCenter === nextProps.item.isInCenter
 );
+
+
+
+const HeaderComponent = () => {
+    // const { top, height } = useHeaderMeasurements()
+    // const scrollY = useCurrentTabScrollY()
+
+    // const headerAnimatedStyle = useAnimatedStyle(() => {
+    //     const opacity = interpolate(
+    //         scrollY.value,
+    //         [0, 60],
+    //         [1, 0],
+    //         'clamp'
+    //     );
+
+    //     return {
+    //         opacity,
+    //     };
+    // });
+
+    return (
+        <Animated.View style={[styles.headerContainer, 
+        // headerAnimatedStyle
+        ]} pointerEvents="box-none">
+            <Text style={styles.headerTitle} pointerEvents="auto">SportApp</Text>
+            <Button title='Follow' onPress={() => alert('asd')} />
+        </Animated.View>
+    );
+};
+
 
 const App = () => {
     const [postsData, setPostsData] = useState(generateFakeData(1, ITEMS_PER_PAGE));
@@ -96,15 +130,9 @@ const App = () => {
         setLoading(prev => ({ ...prev, [tabName]: false }));
     }, [loading, postsData, followingData, videosData]);
 
-    const HeaderComponent = useCallback(() => {
-        return (
-            <View style={styles.headerContainer} pointerEvents="box-none">
-                <Text style={styles.headerTitle}>My App</Text>
-                <Button title='Follow' onPress={()=>alert('asd')} />
-                <Text style={styles.headerSubtitle}>Welcome to the enhanced TabView demo!</Text>
-            </View>
-        );
-    }, []);
+
+
+
 
     const renderItem = useCallback((type) => {
         return useMemo(() => ({ item, index }) => {
@@ -185,10 +213,11 @@ const App = () => {
                 ref={collapsibleRef}
                 renderHeader={HeaderComponent}
                 headerHeight={120}
-                renderTabBar={props => <MaterialTabBar {...props} scrollEnabled tabStyle={{ width: 'auto' }} />}
+                renderTabBar={props => <MaterialTabBar {...props} scrollEnabled />}
                 snapThreshold={0.5}
                 headerContainerStyle={styles.headerContainerStyle}
                 containerStyle={styles.containerStyle}
+                lazy
             >
                 <Tabs.Tab name="For You" label="For You">
                     <Tabs.FlashList
