@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0c5beba0-ac69-4fee-9cff-9fc779e775bd" name="Changes" comment="wip - firing the onSroll for flatlist and scrollview" />
+    <list default="true" id="0c5beba0-ac69-4fee-9cff-9fc779e775bd" name="Changes" comment="wip - firing the onSroll for flatlist and scrollview">
+      <change beforePath="$PROJECT_DIR$/app/components/ScrollableHeaderTabs.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/index.tsx" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -49,7 +52,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1721962017894</updated>
-      <workItem from="1721962025458" duration="25398000" />
+      <workItem from="1721962025458" duration="25633000" />
     </task>
     <task id="LOCAL-00001" summary="working on support for all kinds of lists+scrollviews">
       <created>1721970934800</created>

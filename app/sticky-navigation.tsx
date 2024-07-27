@@ -20,12 +20,14 @@ const HeaderComponent = () => {
     return (
         <Animated.View style={[styles.headerContainer, headerAnimatedStyle]} pointerEvents="box-none">
 
-            <View>
-                <Text style={styles.headerTitle} pointerEvents="auto">HomePage</Text>
-            </View>
-            <Link href="/sticky-navigation">
-                <Text>Your Team</Text>
+            <Link href="/">
+                <Text>Back</Text>
             </Link>
+            <View>
+                <Text style={styles.headerTitle} pointerEvents="auto">Manchester United</Text>
+                <Text pointerEvents="auto">Premier League</Text>
+            </View>
+            <Button onPress={() => alert('follow')} title="Follow" />
         </Animated.View>
     );
 };
@@ -60,7 +62,7 @@ const VideoItem = React.memo(({ item }) => (
     </View>
 ), (prevProps, nextProps) => prevProps.item.isInCenter === nextProps.item.isInCenter);
 
-const HomePage = () => {
+const App = () => {
     const [postsData, setPostsData] = useState(generateFakeData(1, ITEMS_PER_PAGE));
     const [followingData, setFollowingData] = useState(generateFakeData(1, ITEMS_PER_PAGE));
     const [videosData, setVideosData] = useState(generateFakeData(1, ITEMS_PER_PAGE));
@@ -265,4 +267,4 @@ const HomePage = () => {
     );
 };
 
-export default HomePage;
+export default App;
