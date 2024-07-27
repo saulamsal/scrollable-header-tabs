@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 export const styles = StyleSheet.create({
     headerContainer: {
         width: '100%',
-        height: 250,
+        height: 450,
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#3498db',
@@ -30,8 +30,8 @@ export const styles = StyleSheet.create({
         padding: 20,
         borderBottomWidth: 1,
         borderBottomColor: '#e0e0e0',
-        height: 300,
-        backgroundColor: '#f9f9f9',
+        height: 450,
+        backgroundColor: 'yellow',
     },
     followingItem: {
         padding: 20,

@@ -123,22 +123,31 @@ const App = () => {
         }, [type]);
     }, []);
 
+  
     const onViewableItemsChanged = useCallback((type) => {
         return useMemo(() => ({ viewableItems, changed }) => {
             if (viewableItems.length === 0) return;
 
             const screenHeight = Dimensions.get('window').height;
             const screenCenter = screenHeight / 2;
-            let closestItem = viewableItems.reduce((prev, current) => {
-                const prevDistance = Math.abs(prev.item.y + prev.item.height / 2 - screenCenter);
-                const currDistance = Math.abs(current.item.y + current.item.height / 2 - screenCenter);
-                return prevDistance < currDistance ? prev : current;
+
+            let maxOverlapItem = viewableItems.reduce((prev, current) => {
+                const prevTop = prev.item.y;
+                const prevBottom = prev.item.y + prev.item.height;
+                const currTop = current.item.y;
+                const currBottom = current.item.y + current.item.height;
+
+                const prevOverlap = Math.min(prevBottom, screenCenter) - Math.max(prevTop, screenCenter - prev.item.height);
+                const currOverlap = Math.min(currBottom, screenCenter) - Math.max(currTop, screenCenter - current.item.height);
+
+                return currOverlap > prevOverlap ? current : prev;
             });
 
-            updateCenterItem(type, closestItem.item.id);
-            console.log(`Item ${closestItem.item.id} is now in the center`);
+            updateCenterItem(type, maxOverlapItem.item.id);
+            console.log(`Item ${maxOverlapItem.item.id} is now in the center`);
         }, [type]);
     }, []);
+    
 
     const updateCenterItem = useCallback((type, centerItemId) => {
         
@@ -167,7 +176,7 @@ const App = () => {
     }), []);
 
     const viewabilityConfig = useRef({
-        itemVisiblePercentThreshold: 50 // Item is considered visible when 50% or more of it is visible
+        itemVisiblePercentThreshold: 90 // Item is considered visible when 50% or more of it is visible
     }).current;
 
     return (
