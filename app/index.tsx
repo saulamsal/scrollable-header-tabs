@@ -1,6 +1,11 @@
 import React, { useState, useCallback, useEffect, useContext } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Animated, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
+import Animated, { useAnimatedStyle,useAnimatedReaction, interpolateColor } from 'react-native-reanimated';
 import ScrollableHeaderTabs, { ViewabilityItemsContext, ItemKeyContext } from './components/ScrollableHeaderTabs';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import { useSharedValue,
+    interpolate
+ } from 'react-native-reanimated';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -129,7 +134,7 @@ const App = () => {
             name: 'Recap',
             label: 'Recap',
             listType: 'ScrollView',
-            component: (
+            component: () => (
                 <View>
                     {videosData.map(item => (
                         <VideoItem key={`video-${item.id}`} item={item} />
@@ -141,6 +146,7 @@ const App = () => {
         },
     ]);
 
+
     useEffect(() => {
         setTabs(prevTabs => prevTabs.map(tab => {
             if (tab.name === 'For You') {
@@ -150,7 +156,7 @@ const App = () => {
             } else if (tab.name === 'Recap') {
                 return {
                     ...tab,
-                    component: (
+                    component: () => (
                         <View>
                             {videosData.map(item => (
                                 <VideoItem key={`video-${item.id}`} item={item} />
@@ -163,73 +169,72 @@ const App = () => {
         }));
     }, [postsData, followingData, videosData]);
 
-    const HeaderComponent = ({ scrollY, headerHeight, effectiveHeaderHeightOnScroll, isTabSticky }) => {
-        const contentTranslateY = scrollY.interpolate({
-            inputRange: [0, headerHeight - effectiveHeaderHeightOnScroll],
-            outputRange: [0, -(headerHeight - effectiveHeaderHeightOnScroll)],
-            extrapolate: 'clamp',
+
+
+    const scrollY = useSharedValue(0); // Add this line
+
+    const HeaderComponent = useCallback(({ scrollY, headerHeight, effectiveHeaderHeightOnScroll }) => {
+        const animatedStyle = useAnimatedStyle(() => {
+            const backgroundColor = interpolateColor(
+                scrollY.value,
+                [0, headerHeight - effectiveHeaderHeightOnScroll],
+                ['#3498db', '#2980b9']
+            );
+            return {
+                backgroundColor,
+            };
         });
 
-console.log(scrollY.value);
+        const animatedTextStyle = useAnimatedStyle(() => {
+            const opacity = interpolate(
+                scrollY.value,
+                [0, headerHeight - effectiveHeaderHeightOnScroll],
+                [1, 0.5]
+            );
+            return {
+                opacity,
+            };
+        });
+
+        console.log('HeaderComponent scrollY:', scrollY.value); // Add this line
 
         return (
-            <Animated.View
-                style={[
-                    styles.headerContainer,
-                    {
-                        height: headerHeight,
-                        transform: [{ translateY: contentTranslateY }],
-                    },
-                ]}
-            >
-
-                <View style={styles.contentContainer}>
-                    <Text style={styles.headerTitle}>My App</Text>
-                    <Text style={styles.headerSubtitle}>Welcome to the enhanced TabView demo!</Text>
-                </View>
+            <Animated.View style={[styles.headerContainer, animatedStyle]}>
+                <Animated.View style={[styles.contentContainer, animatedTextStyle]}>
+                    <Animated.Text style={[styles.headerTitle, animatedTextStyle]}>My App</Animated.Text>
+                    <Animated.Text style={[styles.headerSubtitle, animatedTextStyle]}>Welcome to the enhanced TabView demo!</Animated.Text>
+                </Animated.View>
             </Animated.View>
         );
-    };
-
-
-
+    }, []);
 
     return (
-        <ScrollableHeaderTabs
-            tabs={tabs}
-            HeaderComponent={HeaderComponent}
-            headerHeightOnScroll={120}
-            materialTopTabProps={{
-                lazy: true,
-                lazyPreloadDistance: 2,
-                tabBarScrollEnabled: true,
-                tabStyle: { width: 'auto' },
-                labelStyle: { fontSize: 14, color: 'black' },
-            }}
-        />
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <ScrollableHeaderTabs
+                tabs={tabs}
+                HeaderComponent={HeaderComponent}
+                headerHeightOnScroll={120}
+                scrollY={scrollY}
+                materialTopTabProps={{
+                    lazy: true,
+                    lazyPreloadDistance: 2,
+                    tabBarScrollEnabled: true,
+                    tabStyle: { width: 'auto' },
+                    labelStyle: { fontSize: 14, color: 'black' },
+                }}
+            />
+        </GestureHandlerRootView>
     );
 };
 
+
 const styles = StyleSheet.create({
     headerContainer: {
-        backgroundColor: '#3498db',
         width: '100%',
-    },
-    safeArea: {
-        backgroundColor: '#2980b9',
-    },
-    menuContainer: {
-        height: 40,
-        justifyContent: 'center',
-        paddingHorizontal: 20,
-    },
-    menuText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
+        height: '100%',
     },
     contentContainer: {
-        height: 80,
+        flex: 1,
         justifyContent: 'center',
         paddingHorizontal: 20,
     },
@@ -248,24 +253,24 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#e0e0e0',
         height: 300,
-        backgroundColor: 'red',
+        backgroundColor: '#f9f9f9',
     },
     followingItem: {
         padding: 20,
         borderBottomWidth: 1,
         borderBottomColor: '#e0e0e0',
         height: 300,
-        backgroundColor: 'red',
+        backgroundColor: '#f9f9f9',
     },
     videoItem: {
         padding: 20,
         borderBottomWidth: 1,
         borderBottomColor: '#e0e0e0',
         height: 300,
-        backgroundColor: 'red',
+        backgroundColor: '#f9f9f9',
     },
     centeredItem: {
-        backgroundColor: 'green',
+        backgroundColor: '#e6e6e6',
     },
 });
 
