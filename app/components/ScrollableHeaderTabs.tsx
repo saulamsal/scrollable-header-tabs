@@ -9,7 +9,8 @@ import {
 } from 'react-native';
 import { TabView, SceneMap } from 'react-native-tab-view';
 
-import { FlashList } from '@shopify/flash-list';
+import { FlashList,
+ } from '@shopify/flash-list';
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
@@ -27,6 +28,7 @@ const windowWidth = Dimensions.get('window').width;
 const TabBarHeight = 48;
 const SCROLL_THRESHOLD = 5;
 
+
 const AnimatedFlashList = Animated.createAnimatedComponent(FlashList);
 
 const MAX_VIEWABLE_ITEMS = 1;
@@ -40,15 +42,13 @@ export const ViewabilityTracker = React.forwardRef(({ listType, onScroll: parent
     const hasScrolled = useRef(false);
     const animatedRef = useAnimatedRef();
 
-
     const scrollHandler = useAnimatedScrollHandler({
         onScroll: (event) => {
             scrollY.value = event.contentOffset.y;
-            console.log('ViewabilityTracker onScroll:', event.contentOffset.y);
+            console.log(`${listType} onScroll:`, event.contentOffset.y);
             runOnJS(parentOnScroll)(event);
         },
     });
-
 
     const renderItem = useCallback((params) => (
         <ItemKeyContext.Provider value={params.index}>
@@ -67,15 +67,6 @@ export const ViewabilityTracker = React.forwardRef(({ listType, onScroll: parent
             onEndReached?.(info);
         }
     }, [onEndReached]);
-
-    const handleScroll = useCallback((event) => {
-        if (!hasScrolled.current) {
-            hasScrolled.current = true;
-        }
-        if (typeof parentOnScroll === 'function') {
-            parentOnScroll(event);
-        }
-    }, [parentOnScroll]);
 
     const ListComponent = listType === 'FlashList' ? AnimatedFlashList : Animated.FlatList;
 
@@ -107,7 +98,6 @@ export const ViewabilityTracker = React.forwardRef(({ listType, onScroll: parent
         </ViewabilityItemsContext.Provider>
     );
 });
-
 const ScrollableHeaderTabs = React.memo(({
     tabs,
     HeaderComponent,

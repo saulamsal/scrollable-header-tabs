@@ -21,6 +21,7 @@ const fakeApiCall = (delay = 1500) => {
 };
 
 const PostItem = ({ item }) => {
+    console.log('rendered for flashlist');
     const id = useContext(ItemKeyContext);
     const visibleItems = useContext(ViewabilityItemsContext);
     const isCentered = visibleItems.includes(id);
@@ -118,6 +119,7 @@ const App = () => {
             refreshing: refreshing.posts,
             onEndReached: () => onEndReached('Posts'),
             estimatedItemSize: 300,
+            onScrollBeginDrag: () => console.log('flashlist scroll begin')
         },
         {
             name: 'Following',
