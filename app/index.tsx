@@ -1,31 +1,19 @@
 import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, Button, Alert, RefreshControl, Dimensions } from 'react-native';
-
 import { Tabs, CollapsibleRef, MaterialTabBar, useHeaderMeasurements, useCurrentTabScrollY } from 'react-native-collapsible-tab-view';
-
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { styles } from './styles';
 import Animated, { interpolate, useAnimatedStyle } from 'react-native-reanimated';
 
-
 const ITEMS_PER_PAGE = 20;
-
 
 const HeaderComponent = () => {
     const { top, height } = useHeaderMeasurements();
     const scrollY = useCurrentTabScrollY();
 
     const headerAnimatedStyle = useAnimatedStyle(() => {
-        const opacity = interpolate(
-            scrollY.value,
-            [0, 60],
-            [1, 0],
-            'clamp'
-        );
-
-        return {
-            opacity,
-        };
+        const opacity = interpolate(scrollY.value, [0, 60], [1, 0], 'clamp');
+        return { opacity };
     });
 
     return (
@@ -35,7 +23,6 @@ const HeaderComponent = () => {
         </Animated.View>
     );
 };
-
 
 const generateFakeData = (startIndex, count) => {
     return Array.from({ length: count }, (_, i) => ({
@@ -49,32 +36,23 @@ const fakeApiCall = (delay = 1500) => {
     return new Promise(resolve => setTimeout(resolve, delay));
 };
 
-const PostItem = React.memo(
-    ({ item }) => (
-        <View style={[styles.postItem, item.isInCenter && styles.visibleItem]}>
-            <Text>Post {item.title} {item.isInCenter ? '(In Center)' : ''}</Text>
-        </View>
-    ),
-    (prevProps, nextProps) => prevProps.item.isInCenter === nextProps.item.isInCenter
-);
+const PostItem = React.memo(({ item }) => (
+    <View style={[styles.postItem, item.isInCenter && styles.visibleItem]}>
+        <Text>Post {item.title} {item.isInCenter ? '(In Center)' : ''}</Text>
+    </View>
+), (prevProps, nextProps) => prevProps.item.isInCenter === nextProps.item.isInCenter);
 
-const FollowingItem = React.memo(
-    ({ item }) => (
-        <View style={[styles.followingItem, item.isInCenter && styles.visibleItem]}>
-            <Text>Following {item.title} {item.isInCenter ? '(In Center)' : ''}</Text>
-        </View>
-    ),
-    (prevProps, nextProps) => prevProps.item.isInCenter === nextProps.item.isInCenter
-);
+const FollowingItem = React.memo(({ item }) => (
+    <View style={[styles.followingItem, item.isInCenter && styles.visibleItem]}>
+        <Text>Following {item.title} {item.isInCenter ? '(In Center)' : ''}</Text>
+    </View>
+), (prevProps, nextProps) => prevProps.item.isInCenter === nextProps.item.isInCenter);
 
-const VideoItem = React.memo(
-    ({ item }) => (
-        <View style={[styles.videoItem, item.isInCenter && styles.visibleItem]}>
-            <Text>Video {item.title} {item.isInCenter ? '(In Center)' : ''}</Text>
-        </View>
-    ),
-    (prevProps, nextProps) => prevProps.item.isInCenter === nextProps.item.isInCenter
-);
+const VideoItem = React.memo(({ item }) => (
+    <View style={[styles.videoItem, item.isInCenter && styles.visibleItem]}>
+        <Text>Video {item.title} {item.isInCenter ? '(In Center)' : ''}</Text>
+    </View>
+), (prevProps, nextProps) => prevProps.item.isInCenter === nextProps.item.isInCenter);
 
 const App = () => {
     const [postsData, setPostsData] = useState(generateFakeData(1, ITEMS_PER_PAGE));
@@ -102,7 +80,6 @@ const App = () => {
         setRefreshing(prev => ({ ...prev, [tabName]: false }));
         Alert.alert(`${tabName} refreshed!`);
 
-        // Manually trigger onViewableItemsChanged after refresh
         const viewableItems = newData.map((item, index) => ({
             item,
             index,
@@ -154,7 +131,7 @@ const App = () => {
         }, [type]);
     }, []);
 
-    const handleViewableItemsChanged = (type, { viewableItems, changed }) => {
+    const handleViewableItemsChanged = useCallback((type, { viewableItems, changed }) => {
         if (viewableItems.length === 0) return;
 
         const screenHeight = Dimensions.get('window').height;
@@ -174,7 +151,7 @@ const App = () => {
 
         updateCenterItem(type, maxOverlapItem.item.id);
         console.log(`Item ${maxOverlapItem.item.id} is now in the center`);
-    };
+    }, []);
 
     const updateCenterItem = useCallback((type, centerItemId) => {
         const updateFn = (prevData) => prevData.map(item => ({
@@ -196,7 +173,7 @@ const App = () => {
     }, []);
 
     const getItemLayout = useCallback((data, index) => ({
-        length: 300, // Assuming each item has a fixed height of 300
+        length: 300,
         offset: 300 * index,
         index,
     }), []);
@@ -204,9 +181,6 @@ const App = () => {
     const viewabilityConfig = useRef({
         itemVisiblePercentThreshold: 95
     }).current;
-
-
-
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
