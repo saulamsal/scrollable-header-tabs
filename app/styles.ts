@@ -9,7 +9,7 @@ export const styles = StyleSheet.create({
         flexDirection: 'row',
         paddingHorizontal: 16,
         paddingVertical: 20,
-        
+        position: 'relative',
     },
     headerTitle: {
         fontSize: 24,

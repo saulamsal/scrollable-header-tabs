@@ -5,6 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { styles } from './styles';
 import Animated, { interpolate, useAnimatedStyle } from 'react-native-reanimated';
 import { Link } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 const ITEMS_PER_PAGE = 20;
@@ -12,24 +13,28 @@ const ITEMS_PER_PAGE = 20;
 const HeaderComponent = () => {
     const { top, height } = useHeaderMeasurements();
     const scrollY = useCurrentTabScrollY();
+    const insets = useSafeAreaInsets();
 
-    const headerAnimatedStyle = useAnimatedStyle(() => {
+    
+    const fadeAnimatedStyle = useAnimatedStyle(() => {
         const opacity = interpolate(scrollY.value, [0, 60], [1, 0], 'clamp');
         return { opacity };
     });
-
     return (
-        <Animated.View style={[styles.headerContainer, headerAnimatedStyle]} pointerEvents="box-none">
-
-            <Link href="/">
+        <Animated.View style={[styles.headerContainer]} pointerEvents="box-none">
+            <Link href="/" style={styles.backButton}>
                 <Text>Back</Text>
             </Link>
-            <View>
-                <Image pointerEvents="auto"  source={{uri: 'https://upload.wikimedia.org/wikipedia/en/thumb/7/7a/Manchester_United_FC_crest.svg/640px-Manchester_United_FC_crest.svg.png'}} style={styles.headerImage} />
-                <Text style={styles.headerTitle} >Manchester United</Text>
+            <Text style={styles.headerTitle}>Manchester United</Text>
+            <Animated.View style={[styles.fadeContainer, fadeAnimatedStyle]}>
+                <Image 
+                    pointerEvents="auto"  
+                    source={{uri: 'https://upload.wikimedia.org/wikipedia/en/thumb/7/7a/Manchester_United_FC_crest.svg/640px-Manchester_United_FC_crest.svg.png'}} 
+                    style={styles.headerImage} 
+                />
                 <Text pointerEvents="auto">Premier League</Text>
-            </View>
-            <Button onPress={() => alert('follow')} title="Follow" />
+                <Button onPress={() => alert('follow')} title="Follow" />
+            </Animated.View>
         </Animated.View>
     );
 };
@@ -188,12 +193,14 @@ const App = () => {
         itemVisiblePercentThreshold: 95
     }).current;
 
+    const insets = useSafeAreaInsets();
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
             <Tabs.Container
                 ref={collapsibleRef}
                 renderHeader={() => <HeaderComponent />}
-                headerHeight={120}
+                headerHeight={undefined}
+                minHeaderHeight={50} 
                 renderTabBar={props => <MaterialTabBar {...props} scrollEnabled />}
                 snapThreshold={0.5}
                 headerContainerStyle={styles.headerContainerStyle}
