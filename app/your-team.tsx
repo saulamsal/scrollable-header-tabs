@@ -25,16 +25,23 @@ const HeaderComponent = () => {
             <Link href="/" style={styles.backButton}>
                 <Text>Back</Text>
             </Link>
-            <Text style={styles.headerTitle}>Manchester United</Text>
-            <Animated.View style={[styles.fadeContainer, fadeAnimatedStyle]}>
-                <Image 
-                    pointerEvents="auto"  
-                    source={{uri: 'https://upload.wikimedia.org/wikipedia/en/thumb/7/7a/Manchester_United_FC_crest.svg/640px-Manchester_United_FC_crest.svg.png'}} 
-                    style={styles.headerImage} 
-                />
-                <Text pointerEvents="auto">Premier League</Text>
-                <Button onPress={() => alert('follow')} title="Follow" />
-            </Animated.View>
+         <View>
+                <Animated.View style={[styles.fadeContainer, fadeAnimatedStyle]}>
+                    <Image
+                        pointerEvents="auto"
+                        source={{ uri: 'https://upload.wikimedia.org/wikipedia/en/thumb/7/7a/Manchester_United_FC_crest.svg/640px-Manchester_United_FC_crest.svg.png' }}
+                        style={styles.headerImage}
+                    />
+
+                </Animated.View>
+                <Text style={styles.headerTitle}>Manchester United</Text>
+                <Animated.View style={[fadeAnimatedStyle]}>
+                    <Text pointerEvents="auto">Premier League</Text>
+                </Animated.View>
+         </View>
+        
+            <Button onPress={() => alert('follow')} title="Follow" />
+
         </Animated.View>
     );
 };
@@ -200,7 +207,7 @@ const App = () => {
                 ref={collapsibleRef}
                 renderHeader={() => <HeaderComponent />}
                 headerHeight={undefined}
-                minHeaderHeight={50} 
+                minHeaderHeight={80} 
                 renderTabBar={props => <MaterialTabBar {...props} scrollEnabled />}
                 snapThreshold={0.5}
                 headerContainerStyle={styles.headerContainerStyle}
