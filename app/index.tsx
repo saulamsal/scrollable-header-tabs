@@ -73,7 +73,7 @@ const HeaderComponent = () => {
             // headerAnimatedStyle
         ]} pointerEvents="box-none">
             <Text style={styles.headerTitle} pointerEvents="auto">SportApp</Text>
-            <Button title='Follow' onPress={() => alert('asd')} />
+            <Button title='Follow' pointerEvents="auto"  onPress={() => alert('asd')} />
         </Animated.View>
     );
 };
@@ -205,7 +205,7 @@ const App = () => {
     }), []);
 
     const viewabilityConfig = useRef({
-        itemVisiblePercentThreshold: 90 // Item is considered visible when 50% or more of it is visible
+        itemVisiblePercentThreshold: 95 
     }).current;
 
     return (
@@ -219,6 +219,7 @@ const App = () => {
                 headerContainerStyle={styles.headerContainerStyle}
                 containerStyle={styles.containerStyle}
                 lazy
+                cancelLazyFadeIn
             >
                 <Tabs.Tab name="For You" label="For You">
                     <Tabs.FlashList
