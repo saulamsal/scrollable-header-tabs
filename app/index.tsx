@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, Button, Alert, RefreshControl, Dimensions } from 'react-native';
 
-import { Tabs, CollapsibleRef, MaterialTabBar, useHeaderMeasurements, useCurrentTabScrollY } from 'react-native-collapsible-tab-view'; 
+import { Tabs, CollapsibleRef, MaterialTabBar, useHeaderMeasurements, useCurrentTabScrollY } from 'react-native-collapsible-tab-view';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { styles } from './styles';
@@ -69,8 +69,8 @@ const HeaderComponent = () => {
     // });
 
     return (
-        <Animated.View style={[styles.headerContainer, 
-        // headerAnimatedStyle
+        <Animated.View style={[styles.headerContainer,
+            // headerAnimatedStyle
         ]} pointerEvents="box-none">
             <Text style={styles.headerTitle} pointerEvents="auto">SportApp</Text>
             <Button title='Follow' onPress={() => alert('asd')} />
@@ -104,6 +104,16 @@ const App = () => {
         }
         setRefreshing(prev => ({ ...prev, [tabName]: false }));
         Alert.alert(`${tabName} refreshed!`);
+
+        // Manually trigger onViewableItemsChanged after refresh
+        const viewableItems = newData.map((item, index) => ({
+            item,
+            index,
+            isViewable: true,
+            section: null,
+            key: `${tabName.toLowerCase()}-${item.id}`,
+        }));
+        handleViewableItemsChanged(tabName, { viewableItems, changed: [] });
     }, []);
 
     const onEndReached = useCallback(async (tabName) => {
@@ -130,10 +140,6 @@ const App = () => {
         setLoading(prev => ({ ...prev, [tabName]: false }));
     }, [loading, postsData, followingData, videosData]);
 
-
-
-
-
     const renderItem = useCallback((type) => {
         return useMemo(() => ({ item, index }) => {
             const ItemComponent = type === 'Posts' ? PostItem : type === 'Following' ? FollowingItem : VideoItem;
@@ -151,34 +157,29 @@ const App = () => {
         }, [type]);
     }, []);
 
-  
-    const onViewableItemsChanged = useCallback((type) => {
-        return useMemo(() => ({ viewableItems, changed }) => {
-            if (viewableItems.length === 0) return;
+    const handleViewableItemsChanged = (type, { viewableItems, changed }) => {
+        if (viewableItems.length === 0) return;
 
-            const screenHeight = Dimensions.get('window').height;
-            const screenCenter = screenHeight / 2;
+        const screenHeight = Dimensions.get('window').height;
+        const screenCenter = screenHeight / 2;
 
-            let maxOverlapItem = viewableItems.reduce((prev, current) => {
-                const prevTop = prev.item.y;
-                const prevBottom = prev.item.y + prev.item.height;
-                const currTop = current.item.y;
-                const currBottom = current.item.y + current.item.height;
+        let maxOverlapItem = viewableItems.reduce((prev, current) => {
+            const prevTop = prev.item.y;
+            const prevBottom = prev.item.y + prev.item.height;
+            const currTop = current.item.y;
+            const currBottom = current.item.y + current.item.height;
 
-                const prevOverlap = Math.min(prevBottom, screenCenter) - Math.max(prevTop, screenCenter - prev.item.height);
-                const currOverlap = Math.min(currBottom, screenCenter) - Math.max(currTop, screenCenter - current.item.height);
+            const prevOverlap = Math.min(prevBottom, screenCenter) - Math.max(prevTop, screenCenter);
+            const currOverlap = Math.min(currBottom, screenCenter) - Math.max(currTop, screenCenter);
 
-                return currOverlap > prevOverlap ? current : prev;
-            });
+            return currOverlap > prevOverlap ? current : prev;
+        });
 
-            updateCenterItem(type, maxOverlapItem.item.id);
-            console.log(`Item ${maxOverlapItem.item.id} is now in the center`);
-        }, [type]);
-    }, []);
-    
+        updateCenterItem(type, maxOverlapItem.item.id);
+        console.log(`Item ${maxOverlapItem.item.id} is now in the center`);
+    };
 
     const updateCenterItem = useCallback((type, centerItemId) => {
-        
         const updateFn = (prevData) => prevData.map(item => ({
             ...item,
             isInCenter: item.id === centerItemId
@@ -233,7 +234,7 @@ const App = () => {
                                 onRefresh={() => onRefresh('Posts')}
                             />
                         }
-                        onViewableItemsChanged={onViewableItemsChanged('Posts')}
+                        onViewableItemsChanged={handleViewableItemsChanged.bind(null, 'Posts')}
                         viewabilityConfig={viewabilityConfig}
                         getItemLayout={getItemLayout}
                         maxToRenderPerBatch={10}
@@ -256,7 +257,7 @@ const App = () => {
                                 onRefresh={() => onRefresh('Following')}
                             />
                         }
-                        onViewableItemsChanged={onViewableItemsChanged('Following')}
+                        onViewableItemsChanged={handleViewableItemsChanged.bind(null, 'Following')}
                         viewabilityConfig={viewabilityConfig}
                         getItemLayout={getItemLayout}
                         maxToRenderPerBatch={10}
@@ -279,7 +280,7 @@ const App = () => {
                                 onRefresh={() => onRefresh('Videos')}
                             />
                         }
-                        onViewableItemsChanged={onViewableItemsChanged('Videos')}
+                        onViewableItemsChanged={handleViewableItemsChanged.bind(null, 'Videos')}
                         viewabilityConfig={viewabilityConfig}
                         getItemLayout={getItemLayout}
                         maxToRenderPerBatch={10}
