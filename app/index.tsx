@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useMemo } from 'react';
-import { View, Text, StyleSheet, Button, Alert, RefreshControl, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Alert, RefreshControl, Dimensions } from 'react-native';
 import { Tabs, CollapsibleRef, MaterialTabBar, useHeaderMeasurements, useCurrentTabScrollY } from 'react-native-collapsible-tab-view';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { styles } from './styles';
@@ -19,7 +19,6 @@ const HeaderComponent = () => {
 
     return (
         <Animated.View style={[styles.headerContainer, headerAnimatedStyle]} pointerEvents="box-none">
-
             <View>
                 <Text style={styles.headerTitle} pointerEvents="auto">HomePage</Text>
             </View>
@@ -63,37 +62,21 @@ const VideoItem = React.memo(({ item }) => (
 const HomePage = () => {
     const [postsData, setPostsData] = useState(generateFakeData(1, ITEMS_PER_PAGE));
     const [followingData, setFollowingData] = useState(generateFakeData(1, ITEMS_PER_PAGE));
-    const [videosData, setVideosData] = useState(generateFakeData(1, ITEMS_PER_PAGE));
-    const [refreshing, setRefreshing] = useState({ posts: false, following: false, videos: false });
-    const [loading, setLoading] = useState({ posts: false, following: false, videos: false });
+    const [refreshing, setRefreshing] = useState({ posts: false, following: false });
+    const [loading, setLoading] = useState({ posts: false, following: false });
     const collapsibleRef = useRef();
 
     const onRefresh = useCallback(async (tabName) => {
         setRefreshing(prev => ({ ...prev, [tabName]: true }));
         await fakeApiCall();
         const newData = generateFakeData(1, ITEMS_PER_PAGE);
-        switch (tabName) {
-            case 'Posts':
-                setPostsData(newData);
-                break;
-            case 'Following':
-                setFollowingData(newData);
-                break;
-            case 'Videos':
-                setVideosData(newData);
-                break;
+        if (tabName === 'Posts') {
+            setPostsData(newData);
+        } else if (tabName === 'Following') {
+            setFollowingData(newData);
         }
         setRefreshing(prev => ({ ...prev, [tabName]: false }));
         Alert.alert(`${tabName} refreshed!`);
-
-        const viewableItems = newData.map((item, index) => ({
-            item,
-            index,
-            isViewable: true,
-            section: null,
-            key: `${tabName.toLowerCase()}-${item.id}`,
-        }));
-        handleViewableItemsChanged(tabName, { viewableItems, changed: [] });
     }, []);
 
     const onEndReached = useCallback(async (tabName) => {
@@ -101,28 +84,20 @@ const HomePage = () => {
         setLoading(prev => ({ ...prev, [tabName]: true }));
         await fakeApiCall(1000);
         const newData = generateFakeData(
-            tabName === 'Posts' ? postsData.length + 1 :
-                tabName === 'Following' ? followingData.length + 1 :
-                    videosData.length + 1,
+            tabName === 'Posts' ? postsData.length + 1 : followingData.length + 1,
             ITEMS_PER_PAGE
         );
-        switch (tabName) {
-            case 'Posts':
-                setPostsData(prev => [...prev, ...newData]);
-                break;
-            case 'Following':
-                setFollowingData(prev => [...prev, ...newData]);
-                break;
-            case 'Videos':
-                setVideosData(prev => [...prev, ...newData]);
-                break;
+        if (tabName === 'Posts') {
+            setPostsData(prev => [...prev, ...newData]);
+        } else if (tabName === 'Following') {
+            setFollowingData(prev => [...prev, ...newData]);
         }
         setLoading(prev => ({ ...prev, [tabName]: false }));
-    }, [loading, postsData, followingData, videosData]);
+    }, [loading, postsData, followingData]);
 
     const renderItem = useCallback((type) => {
-        return useMemo(() => ({ item, index }) => {
-            const ItemComponent = type === 'Posts' ? PostItem : type === 'Following' ? FollowingItem : VideoItem;
+        return ({ item, index }) => {
+            const ItemComponent = type === 'Posts' ? PostItem : FollowingItem;
             return (
                 <View
                     onLayout={(event) => {
@@ -134,10 +109,10 @@ const HomePage = () => {
                     <ItemComponent item={item} />
                 </View>
             );
-        }, [type]);
+        };
     }, []);
 
-    const handleViewableItemsChanged = useCallback((type, { viewableItems, changed }) => {
+    const handleViewableItemsChanged = useCallback((type, { viewableItems }) => {
         if (viewableItems.length === 0) return;
 
         const screenHeight = Dimensions.get('window').height;
@@ -165,16 +140,10 @@ const HomePage = () => {
             isInCenter: item.id === centerItemId
         }));
 
-        switch (type) {
-            case 'Posts':
-                setPostsData(updateFn);
-                break;
-            case 'Following':
-                setFollowingData(updateFn);
-                break;
-            case 'Videos':
-                setVideosData(updateFn);
-                break;
+        if (type === 'Posts') {
+            setPostsData(updateFn);
+        } else if (type === 'Following') {
+            setFollowingData(updateFn);
         }
     }, []);
 
@@ -215,7 +184,7 @@ const HomePage = () => {
                                 onRefresh={() => onRefresh('Posts')}
                             />
                         }
-                        onViewableItemsChanged={handleViewableItemsChanged.bind(null, 'Posts')}
+                        onViewableItemsChanged={info => handleViewableItemsChanged('Posts', info)}
                         viewabilityConfig={viewabilityConfig}
                         getItemLayout={getItemLayout}
                         maxToRenderPerBatch={10}
@@ -238,7 +207,7 @@ const HomePage = () => {
                                 onRefresh={() => onRefresh('Following')}
                             />
                         }
-                        onViewableItemsChanged={handleViewableItemsChanged.bind(null, 'Following')}
+                        onViewableItemsChanged={info => handleViewableItemsChanged('Following', info)}
                         viewabilityConfig={viewabilityConfig}
                         getItemLayout={getItemLayout}
                         maxToRenderPerBatch={10}
@@ -249,7 +218,6 @@ const HomePage = () => {
                 </Tabs.Tab>
                 <Tabs.Tab name="About" label="About">
                     <Tabs.ScrollView>
-                        {/* add some random info about the team like description, estd etc etc */}
                         <Text>Manchester United</Text>
                         <Text>Premier League</Text>
                         <Text>Founded: 1878</Text>
