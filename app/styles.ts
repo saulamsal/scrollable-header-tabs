@@ -38,7 +38,7 @@ export const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#e0e0e0',
         height: 450,
-        backgroundColor: 'yellow',
+        backgroundColor: 'teal',
     },
     followingItem: {
         padding: 20,
