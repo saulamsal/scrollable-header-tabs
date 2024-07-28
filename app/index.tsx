@@ -94,11 +94,38 @@ const PostItem = React.memo(({ item }) => {
 }, (prevProps, nextProps) => prevProps.item.id === nextProps.item.id && prevProps.visibleItem.value === nextProps.visibleItem.value);
 
 
-const FollowingItem = React.memo(({ item }) => (
-    <View style={[styles.followingItem, item.isInCenter && styles.visibleItem]}>
-        <Text>Following {item.title} {item.isInCenter ? '(In Center)' : ''}</Text>
-    </View>
-), (prevProps, nextProps) => prevProps.item.isInCenter === nextProps.item.isInCenter);
+const FollowingItem = React.memo(({ item }) => {
+    const visibleItem = useContext(VisibleItemContext);
+    const id = useContext(ItemKeyContext);
+    const context = useContext(ViewabilityItemsContext);
+
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            opacity: visibleItem.value === item.id ? 1 : 0.5,
+        };
+    });
+
+    useAnimatedReaction(
+        () => context.value,
+        (ctx) => {
+            if (ctx.includes(id)) {
+                console.log('ctx includes id', ctx, id);
+                // do stuff on item visible
+            } else if (!ctx.includes(id)) {
+                // do stuff on item invisible
+            }
+        },
+        []
+    );
+
+    return (
+        <ItemKeyContext.Provider value={item.id}>
+            <Animated.View style={[styles.postItem, animatedStyle]}>
+                <Text>Following {item.title} {visibleItem.value === item.id ? '(In Center)' : ''}</Text>
+            </Animated.View>
+        </ItemKeyContext.Provider>
+    );
+}, (prevProps, nextProps) => prevProps.item.id === nextProps.item.id && prevProps.visibleItem.value === nextProps.visibleItem.value);
 
 const VideoItem = React.memo(({ item }) => (
     <View style={[styles.videoItem, item.isInCenter && styles.visibleItem]}>
