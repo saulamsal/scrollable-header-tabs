@@ -6,6 +6,7 @@ import { styles, randomColor } from './styles';
 import Animated, { useSharedValue, interpolate, useAnimatedStyle, runOnJS, useAnimatedReaction } from 'react-native-reanimated';
 import { Link } from 'expo-router';
 import { debounce } from 'lodash';
+import { BlurView } from 'expo-blur';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -123,6 +124,25 @@ const VideoItem = React.memo(({ item }) => (
     </View>
 ), (prevProps, nextProps) => prevProps.item.isInCenter === nextProps.item.isInCenter);
 
+
+
+const CustomHeaderBackground = ({children}) => {
+    return <BlurView
+        tint={"light"}
+        intensity={95}
+        display="flex"
+    >
+   {children}
+
+    </BlurView>
+}
+
+const CustomComponentOnHeader = () => {
+    return <View style={{width:40, height:40, position: 'absolute',  right: 0, bottom: 0, zIndex:99}}>
+        <Text>•••</Text>
+    </View>
+}
+
 const HomePage = () => {
     const [postsData, setPostsData] = useState(generateFakeData(1, ITEMS_PER_PAGE));
     const [followingData, setFollowingData] = useState(generateFakeData(1, ITEMS_PER_PAGE));
@@ -226,6 +246,8 @@ const HomePage = () => {
                         containerStyle={styles.containerStyle}
                         lazy
                         cancelLazyFadeIn
+                        CustomHeaderBackground={CustomHeaderBackground}
+                        CustomComponentOnHeader={CustomComponentOnHeader}
                     >
                         <Tabs.Tab name="News" label="News">
                             <Tabs.FlashList

@@ -1,0 +1,85 @@
+diff --git a/node_modules/react-native-collapsible-tab-view/src/Container.tsx b/node_modules/react-native-collapsible-tab-view/src/Container.tsx
+index bf9729a..da78446 100644
+--- a/node_modules/react-native-collapsible-tab-view/src/Container.tsx
++++ b/node_modules/react-native-collapsible-tab-view/src/Container.tsx
+@@ -78,6 +78,8 @@ export const Container = React.memo(
+         onTabChange,
+         width: customWidth,
+         allowHeaderOverscroll,
++        CustomHeaderBackground,
++        CustomComponentOnHeader
+       },
+       ref
+     ) => {
+@@ -349,6 +351,16 @@ export const Container = React.memo(
+         [onTabPress]
+       )
+ 
++      const CustomHeaderBackgroundContainer = ({ children }) => {
++        // Check if a CustomHeaderBackground is provided
++        if (CustomHeaderBackground) {
++          // Use the provided CustomHeaderBackground to wrap the children
++          return <CustomHeaderBackground>{children}</CustomHeaderBackground>;
++        }
++        // If no wrapper is provided, just render the children
++        return <>{children}</>;
++      };
++
+       return (
+         <Context.Provider
+           value={{
+@@ -390,10 +402,14 @@ export const Container = React.memo(
+                 styles.topContainer,
+                 headerContainerStyle,
+                 !cancelTranslation && stylez,
++                CustomHeaderBackground && { backgroundColor: 'transparent' }
+               ]}
+             >
++              <CustomHeaderBackgroundContainer>
+               <View
+-                style={[styles.container, styles.headerContainer]}
++                style={[styles.container, styles.headerContainer, CustomHeaderBackground && {
++                  backgroundColor: 'transparent'
++                }]}
+                 onLayout={getHeaderHeight}
+                 pointerEvents="box-none"
+               >
+@@ -409,7 +425,15 @@ export const Container = React.memo(
+                   })}
+               </View>
+               <View
+-                style={[styles.container, styles.tabBarContainer]}
++                style={[styles.container, styles.tabBarContainer, CustomHeaderBackground && {
++                  backgroundColor: 'transparent',
++                },
++                  {
++                    display: 'flex',
++                    flex: 1,
++                    flexDirection: 'row',
++                    alignItems: 'center',
++                  }]}
+                 onLayout={getTabBarHeight}
+                 pointerEvents="box-none"
+               >
+@@ -425,6 +449,8 @@ export const Container = React.memo(
+                     tabProps,
+                   })}
+               </View>
++                {CustomComponentOnHeader ? CustomComponentOnHeader() : null}
++              </CustomHeaderBackgroundContainer>
+             </Animated.View>
+ 
+             <AnimatedPagerView
+diff --git a/node_modules/react-native-collapsible-tab-view/src/types.ts b/node_modules/react-native-collapsible-tab-view/src/types.ts
+index 00fbafc..edef40a 100644
+--- a/node_modules/react-native-collapsible-tab-view/src/types.ts
++++ b/node_modules/react-native-collapsible-tab-view/src/types.ts
+@@ -132,6 +132,8 @@ export type CollapsibleProps = {
+    * @default false
+    */
+   allowHeaderOverscroll?: boolean
++  CustomHeaderBackground?: React.ReactNode
++  CustomComponentOnHeader?: React.ReactNode
+ }
+ 
+ export type ContextType<T extends TabName = TabName> = {
