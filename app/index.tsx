@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo, createContext
 import { View, Text, StyleSheet, Alert, RefreshControl, Dimensions } from 'react-native';
 import { Tabs, CollapsibleRef, MaterialTabBar, useHeaderMeasurements, useCurrentTabScrollY } from 'react-native-collapsible-tab-view';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { styles } from './styles';
+import { styles, randomColor } from './styles';
 import Animated, { useSharedValue, interpolate, useAnimatedStyle, runOnJS, useAnimatedReaction } from 'react-native-reanimated';
 import { Link } from 'expo-router';
 import { debounce } from 'lodash';
@@ -72,7 +72,7 @@ const PostItem = React.memo(({ item }) => {
 
     return (
         <ItemKeyContext.Provider value={item.id}>
-            <View style={[styles.postItem, { opacity: isVisible ? 1 : 0.5 }]}>
+            <View style={[styles.postItem, {backgroundColor: randomColor(), opacity: isVisible ? 1 : 0.3 }]}>
                 <Text>Post {item.title} {isVisible ? '(In Center)' : ''}</Text>
             </View>
         </ItemKeyContext.Provider>

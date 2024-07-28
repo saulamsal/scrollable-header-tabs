@@ -1,5 +1,11 @@
 import { StyleSheet } from "react-native";
 
+//generate random colorful color 
+export const randomColor = () => {
+    return '#' + Math.floor(Math.random()*16777215).toString(16);
+}
+
+
 export const styles = StyleSheet.create({
     headerContainer: {
         width: '100%',
@@ -35,15 +41,11 @@ export const styles = StyleSheet.create({
     },
     postItem: {
         padding: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
         height: 450,
-        backgroundColor: 'teal',
+        backgroundColor: 'red',
     },
     followingItem: {
         padding: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
         height: 300,
         backgroundColor: '#f9f9f9',
     },
