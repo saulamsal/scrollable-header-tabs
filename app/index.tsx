@@ -5,7 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { styles } from './styles';
 import Animated, { useSharedValue, interpolate, useAnimatedStyle, useAnimatedReaction } from 'react-native-reanimated';
 import { Link } from 'expo-router';
-import { debounce } from 'lodash'; // No changes needed here
+import { debounce } from 'lodash';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -13,19 +13,13 @@ const MAX_VIEWABLE_ITEMS = 4;
 
 type ViewabilityItemsContextType = string[];
 
-export const ViewabilityItemsContext = createContext<Animated.SharedValue<ViewabilityItemsContextType>>({
-  value: [],
-});
+export const ViewabilityItemsContext = createContext<Animated.SharedValue<ViewabilityItemsContextType> | null>(null);
 
 type VisibleItemContextType = Animated.SharedValue<number>;
 
-export const VisibleItemContext = createContext<VisibleItemContextType>({
-    value: 0,
-});
-
+export const VisibleItemContext = createContext<VisibleItemContextType | null>(null);
 
 export const ItemKeyContext = createContext<string | undefined>(undefined);
-
 
 const HeaderComponent = () => {
     const { top, height } = useHeaderMeasurements();
@@ -64,6 +58,10 @@ const PostItem = React.memo(({ item }) => {
     const visibleItem = useContext(VisibleItemContext);
     const context = useContext(ViewabilityItemsContext);
 
+    if (!visibleItem || !context) {
+        return null; // or some fallback UI
+    }
+
     const animatedStyle = useAnimatedStyle(() => {
         return {
             opacity: visibleItem.value === item.id ? 1 : 0.5,
@@ -81,7 +79,7 @@ const PostItem = React.memo(({ item }) => {
                 console.log('Item is visible:', item.id); // Debugging line
                 // do stuff on item visible
             } else {
-                // console.log('Item is not visible:', item.id); // Debugging line
+                console.log('Item is not visible:', item.id); // Debugging line
                 // do stuff on item invisible
             }
         },
@@ -95,13 +93,16 @@ const PostItem = React.memo(({ item }) => {
             </Animated.View>
         </ItemKeyContext.Provider>
     );
-}, (prevProps, nextProps) => prevProps.item.id === nextProps.item.id && prevProps.visibleItem.value === nextProps.visibleItem.value);
-
+}, (prevProps, nextProps) => prevProps.item.id === nextProps.item.id && prevProps.visibleItem?.value === nextProps.visibleItem?.value);
 
 const FollowingItem = React.memo(({ item }) => {
     const visibleItem = useContext(VisibleItemContext);
     const id = useContext(ItemKeyContext);
     const context = useContext(ViewabilityItemsContext);
+
+    if (!visibleItem || !context) {
+        return null; // or some fallback UI
+    }
 
     const animatedStyle = useAnimatedStyle(() => {
         return {
@@ -129,7 +130,7 @@ const FollowingItem = React.memo(({ item }) => {
             </Animated.View>
         </ItemKeyContext.Provider>
     );
-}, (prevProps, nextProps) => prevProps.item.id === nextProps.item.id && prevProps.visibleItem.value === nextProps.visibleItem.value);
+}, (prevProps, nextProps) => prevProps.item.id === nextProps.item.id && prevProps.visibleItem?.value === nextProps.visibleItem?.value);
 
 const VideoItem = React.memo(({ item }) => (
     <View style={[styles.videoItem, item.isInCenter && styles.visibleItem]}>
@@ -230,76 +231,76 @@ const HomePage = () => {
         <GestureHandlerRootView style={{ flex: 1 }}>
             <ViewabilityItemsContext.Provider value={visibleItems}>
                 <VisibleItemContext.Provider value={visibleItem}>
-                <Tabs.Container
-                    ref={collapsibleRef}
-                    renderHeader={() => <HeaderComponent />}
-                    headerHeight={120}
-                    renderTabBar={props => <MaterialTabBar {...props} scrollEnabled />}
-                    snapThreshold={0.5}
-                    headerContainerStyle={styles.headerContainerStyle}
-                    containerStyle={styles.containerStyle}
-                    lazy
-                    cancelLazyFadeIn
-                >
-                    <Tabs.Tab name="News" label="News">
-                        <Tabs.FlashList
-                            data={postsData}
-                            renderItem={renderItem('Posts')}
-                            keyExtractor={(item) => `post-${item.id}`}
-                            estimatedItemSize={300}
-                            onEndReached={() => onEndReached('Posts')}
-                            onEndReachedThreshold={0.1}
-                            refreshControl={
-                                <RefreshControl
-                                    refreshing={refreshing.posts}
-                                    onRefresh={() => onRefresh('Posts')}
-                                />
-                            }
-                            onViewableItemsChanged={info => handleViewableItemsChanged('Posts', info)}
-                            viewabilityConfig={viewabilityConfig}
-                            getItemLayout={getItemLayout}
-                            maxToRenderPerBatch={10}
-                            updateCellsBatchingPeriod={50}
-                            initialNumToRender={5}
-                            windowSize={5}
-                        />
-                    </Tabs.Tab>
-                    <Tabs.Tab name="Following" label="Following">
-                        <Tabs.FlashList
-                            data={followingData}
-                            renderItem={renderItem('Following')}
-                            keyExtractor={(item) => `following-${item.id}`}
-                            onEndReached={() => onEndReached('Following')}
-                            onEndReachedThreshold={0.1}
-                            estimatedItemSize={300}
-                            refreshControl={
-                                <RefreshControl
-                                    refreshing={refreshing.following}
-                                    onRefresh={() => onRefresh('Following')}
-                                />
-                            }
-                            onViewableItemsChanged={info => handleViewableItemsChanged('Following', info)}
-                            viewabilityConfig={viewabilityConfig}
-                            getItemLayout={getItemLayout}
-                            maxToRenderPerBatch={10}
-                            updateCellsBatchingPeriod={50}
-                            initialNumToRender={5}
-                            windowSize={5}
-                        />
-                    </Tabs.Tab>
-                    <Tabs.Tab name="About" label="About">
-                        <Tabs.ScrollView>
-                            <Text>Manchester United</Text>
-                            <Text>Premier League</Text>
-                            <Text>Founded: 1878</Text>
-                            <Text>Stadium: Old Trafford</Text>
-                            <Text>Manager: Erik ten Hag</Text>
-                            <Text>Captain: Harry Maguire</Text>
-                            <Text>Top Scorer: Marcus Rashford</Text>
-                            <Text>Top Assists: Bruno Fernandes</Text>
-                        </Tabs.ScrollView>
-                    </Tabs.Tab>
-                </Tabs.Container>
+                    <Tabs.Container
+                        ref={collapsibleRef}
+                        renderHeader={() => <HeaderComponent />}
+                        headerHeight={120}
+                        renderTabBar={props => <MaterialTabBar {...props} scrollEnabled />}
+                        snapThreshold={0.5}
+                        headerContainerStyle={styles.headerContainerStyle}
+                        containerStyle={styles.containerStyle}
+                        lazy
+                        cancelLazyFadeIn
+                    >
+                        <Tabs.Tab name="News" label="News">
+                            <Tabs.FlashList
+                                data={postsData}
+                                renderItem={renderItem('Posts')}
+                                keyExtractor={(item) => `post-${item.id}`}
+                                estimatedItemSize={300}
+                                onEndReached={() => onEndReached('Posts')}
+                                onEndReachedThreshold={0.1}
+                                refreshControl={
+                                    <RefreshControl
+                                        refreshing={refreshing.posts}
+                                        onRefresh={() => onRefresh('Posts')}
+                                    />
+                                }
+                                onViewableItemsChanged={info => handleViewableItemsChanged('Posts', info)}
+                                viewabilityConfig={viewabilityConfig}
+                                getItemLayout={getItemLayout}
+                                maxToRenderPerBatch={10}
+                                updateCellsBatchingPeriod={50}
+                                initialNumToRender={5}
+                                windowSize={5}
+                            />
+                        </Tabs.Tab>
+                        <Tabs.Tab name="Following" label="Following">
+                            <Tabs.FlashList
+                                data={followingData}
+                                renderItem={renderItem('Following')}
+                                keyExtractor={(item) => `following-${item.id}`}
+                                onEndReached={() => onEndReached('Following')}
+                                onEndReachedThreshold={0.1}
+                                estimatedItemSize={300}
+                                refreshControl={
+                                    <RefreshControl
+                                        refreshing={refreshing.following}
+                                        onRefresh={() => onRefresh('Following')}
+                                    />
+                                }
+                                onViewableItemsChanged={info => handleViewableItemsChanged('Following', info)}
+                                viewabilityConfig={viewabilityConfig}
+                                getItemLayout={getItemLayout}
+                                maxToRenderPerBatch={10}
+                                updateCellsBatchingPeriod={50}
+                                initialNumToRender={5}
+                                windowSize={5}
+                            />
+                        </Tabs.Tab>
+                        <Tabs.Tab name="About" label="About">
+                            <Tabs.ScrollView>
+                                <Text>Manchester United</Text>
+                                <Text>Premier League</Text>
+                                <Text>Founded: 1878</Text>
+                                <Text>Stadium: Old Trafford</Text>
+                                <Text>Manager: Erik ten Hag</Text>
+                                <Text>Captain: Harry Maguire</Text>
+                                <Text>Top Scorer: Marcus Rashford</Text>
+                                <Text>Top Assists: Bruno Fernandes</Text>
+                            </Tabs.ScrollView>
+                        </Tabs.Tab>
+                    </Tabs.Container>
                 </VisibleItemContext.Provider>
             </ViewabilityItemsContext.Provider>
         </GestureHandlerRootView>
