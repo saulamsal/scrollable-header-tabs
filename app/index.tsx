@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useMemo, createContext, useContext } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo, createContext, useContext } from 'react';
 import { View, Text, StyleSheet, Alert, RefreshControl, Dimensions } from 'react-native';
 import { Tabs, CollapsibleRef, MaterialTabBar, useHeaderMeasurements, useCurrentTabScrollY } from 'react-native-collapsible-tab-view';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -62,7 +62,6 @@ const fakeApiCall = (delay = 1500) => {
 
 const PostItem = React.memo(({ item }) => {
     const visibleItem = useContext(VisibleItemContext);
-    const id = useContext(ItemKeyContext);
     const context = useContext(ViewabilityItemsContext);
 
     const animatedStyle = useAnimatedStyle(() => {
@@ -71,17 +70,22 @@ const PostItem = React.memo(({ item }) => {
         };
     });
 
+    useEffect(() => {
+        console.log('visibleItem updated to', visibleItem.value); // Debugging line
+    }, [visibleItem.value]);
+
     useAnimatedReaction(
-        () => context.value,
-        (ctx) => {
-            if (ctx.includes(id)) {
-                console.log('ctx includes id', ctx, id);
+        () => visibleItem.value,
+        (currentVisibleItem) => {
+            if (currentVisibleItem === item.id) {
+                console.log('Item is visible:', item.id); // Debugging line
                 // do stuff on item visible
-            } else if (!ctx.includes(id)) {
+            } else {
+                // console.log('Item is not visible:', item.id); // Debugging line
                 // do stuff on item invisible
             }
         },
-        []
+        [item.id] // Ensure the reaction depends on the item id
     );
 
     return (
@@ -109,7 +113,7 @@ const FollowingItem = React.memo(({ item }) => {
         () => context.value,
         (ctx) => {
             if (ctx.includes(id)) {
-                console.log('ctx includes id', ctx, id);
+                // console.log('ctx includes id', ctx, id);
                 // do stuff on item visible
             } else if (!ctx.includes(id)) {
                 // do stuff on item invisible
@@ -189,7 +193,7 @@ const HomePage = () => {
         };
     }, []);
 
-    const handleViewableItemsChanged = useCallback(debounce((type, { viewableItems }) => {
+    const handleViewableItemsChanged = useCallback((type, { viewableItems }) => {
         if (viewableItems.length === 0) return;
 
         const screenHeight = Dimensions.get('window').height;
@@ -209,9 +213,8 @@ const HomePage = () => {
 
         if (visibleItem.value !== maxOverlapItem.item.id) {
             visibleItem.value = maxOverlapItem.item.id;
-            console.log('visibleItem', visibleItem.value);
         }
-    }, 100), []); // Debounce with 100ms delay
+    }, []);
 
     const getItemLayout = useCallback((data, index) => ({
         length: 300,
