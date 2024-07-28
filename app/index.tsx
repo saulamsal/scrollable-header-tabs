@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Alert, RefreshControl, Dimensions } from 'react
 import { Tabs, CollapsibleRef, MaterialTabBar, useHeaderMeasurements, useCurrentTabScrollY } from 'react-native-collapsible-tab-view';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { styles } from './styles';
-import Animated, { useSharedValue, interpolate, useAnimatedStyle, useAnimatedReaction } from 'react-native-reanimated';
+import Animated, { useSharedValue, interpolate, useAnimatedStyle, runOnJS, useAnimatedReaction } from 'react-native-reanimated';
 import { Link } from 'expo-router';
 import { debounce } from 'lodash';
 
@@ -56,44 +56,29 @@ const fakeApiCall = (delay = 1500) => {
 
 const PostItem = React.memo(({ item }) => {
     const visibleItem = useContext(VisibleItemContext);
-    const context = useContext(ViewabilityItemsContext);
-
-    if (!visibleItem || !context) {
-        return null; // or some fallback UI
-    }
-
-    const animatedStyle = useAnimatedStyle(() => {
-        return {
-            opacity: visibleItem.value === item.id ? 1 : 0.5,
-        };
-    });
-
-    useEffect(() => {
-        console.log('visibleItem updated to', visibleItem.value); // Debugging line
-    }, [visibleItem.value]);
+    const [isVisible, setIsVisible] = useState(false);
 
     useAnimatedReaction(
-        () => visibleItem.value,
+        () => visibleItem?.value,
         (currentVisibleItem) => {
             if (currentVisibleItem === item.id) {
-                console.log('Item is visible:', item.id); // Debugging line
-                // do stuff on item visible
+                runOnJS(setIsVisible)(true);
             } else {
-                console.log('Item is not visible:', item.id); // Debugging line
-                // do stuff on item invisible
+                runOnJS(setIsVisible)(false);
             }
         },
-        [item.id] // Ensure the reaction depends on the item id
+        [item.id]
     );
 
     return (
         <ItemKeyContext.Provider value={item.id}>
-            <Animated.View style={[styles.postItem, animatedStyle]}>
-                <Text>Post {item.title} {visibleItem.value === item.id ? '(In Center)' : ''}</Text>
-            </Animated.View>
+            <View style={[styles.postItem, { opacity: isVisible ? 1 : 0.5 }]}>
+                <Text>Post {item.title} {isVisible ? '(In Center)' : ''}</Text>
+            </View>
         </ItemKeyContext.Provider>
     );
-}, (prevProps, nextProps) => prevProps.item.id === nextProps.item.id && prevProps.visibleItem?.value === nextProps.visibleItem?.value);
+}, (prevProps, nextProps) => prevProps.item.id === nextProps.item.id);
+
 
 const FollowingItem = React.memo(({ item }) => {
     const visibleItem = useContext(VisibleItemContext);
